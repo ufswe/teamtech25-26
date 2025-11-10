@@ -1,0 +1,20 @@
+<--- TO RUN THE APPLICATION --->
+- you need 2 terminals (1 backend, 1 frontend)
+- inside backend run "python app.py"
+- inside frontend run "npm start"
+________________________________________________________________
+
+<--- WHEN MAKING EDITS TO CODE, PLEASE FOLLOW THIS WORKFLOW --->
+1   Create new branch       git checkout -b <branch-name>
+3   Make edits
+check which directory you are in ...
+4   Commit changes          git add . && git commit -m "Message"
+5   Push branch             git push origin <branch-name>
+6   Create PR on GitHub
+7   Update main             git checkout main && git pull origin main
+8   Delete old branch       git branch -d <branch-name>
+________________________________________________________________
+
+<--- NOTES --->
+Backend runs on http://localhost:5000
+Frontend runs on http://localhost:3000
