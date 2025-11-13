@@ -1,7 +1,19 @@
 <--- TO RUN THE APPLICATION --->
 - you need 2 terminals (1 backend, 1 frontend)
-- inside backend run "python app.py"
-- inside frontend run "npm start"
+
+Step 1: backend
+cd backend
+<-- IF YOU DONT HAVE A VENV -->
+python -m venv venv #create virtual environment
+source venv/bin/activate #activate virtual environment
+pip install -r "requirements.txt"
+<--ELSE-->
+python app.py
+
+Step 2:
+cd frontend
+npm install
+npm start
 ________________________________________________________________
 
 <--- WHEN MAKING EDITS TO CODE, PLEASE FOLLOW THIS WORKFLOW --->
