@@ -1,20 +1,32 @@
 <--- TO RUN THE APPLICATION --->
 - you need 2 terminals (1 backend, 1 frontend)
 
-Step 1: backend
-cd backend
-<-- IF YOU DONT HAVE A VENV -->
-python -m venv venv #create virtual environment
-source venv/bin/activate #activate virtual environment
-pip install -r "requirements.txt"
-<--ELSE-->
-python app.py
+<-- IF YOU HAVEN'T SET ANYTHING UP YET -->
+** if you do not have NODE.JS downloaded click -> https://nodejs.org/en/download
+** download node.js and restart visual studio code (close & reopen)
 
-Step 2:
-cd frontend
-npm install
-npm start
-________________________________________________________________
+1. open a terminal
+2. cd backend
+3. python -m venv venv
+4.  windows - .\venv\Scripts\Activate.ps1 **
+    mac - source venv/bin/activate
+5. pip install -r "requirements.txt"
+6. python app.py
+7. open another terminal
+8. npm install
+9. npm start
+_____________________________________________________
+
+<-- IF YOU ALREADY COMPLETED SETUP -->
+1. open a terminal
+2. cd backend
+3.  windows - .\venv\Scripts\Activate.ps1
+    mac - source venv/bin/activate
+4. python app.py
+5. open another terminal
+6. cd frontend
+7. npm start
+_____________________________________________________
 
 <--- WHEN MAKING EDITS TO CODE, PLEASE FOLLOW THIS WORKFLOW --->
 1   Create new branch       git checkout -b <branch-name>
