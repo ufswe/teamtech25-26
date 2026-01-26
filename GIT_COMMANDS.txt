@@ -1,0 +1,84 @@
+GIT CHEATSHEET (STUDENT VERSION)
+
+IMPORTANT RULES
+• Do NOT create your own branch unless a team lead tells you to. 
+• Do NOT push directly to main unless your team lead approves. 
+• Always pull before you start working. 
+• If something breaks, ask before forcing anything.
+• BEFORE you start writing code, make sure you know what branch you should be working on.
+
+If you are unsure of WHERE you should push your code (main or a different branch),
+please ask your team lead, Cara or Elise. Please do not assume!
+
+  ------------------------------
+  BASIC WORKFLOW (MOST COMMON)
+  ------------------------------
+
+1.  Make sure you are up to date (will either say up to date or show changes)
+`git pull origin main`
+
+2.  Check status (what files changed?) 
+`git status`
+
+3.  Add your changes 
+`git add .`
+
+4.  Commit your changes 
+`git commit -m “Describe what you changed”`
+
+5.  Push your changes (ONLY if allowed) 
+`git push -u origin branch-name`
+
+
+  ----------------------------
+  BRANCHING (READ CAREFULLY)
+  ----------------------------
+
+You should ONLY create or switch branches if your team lead tells you
+to.
+
+To check what branch you are on: `git branch`
+
+To switch to an existing branch: `git checkout branch-name`
+
+To create a new branch (ONLY if instructed): `git checkout -b
+new-branch-name`
+
+To push your branch to GitHub: `git push -u origin new-branch-name`
+(you must push YOUR branch to github before you can push TO your branch)
+
+  ----------------------
+  UPDATING YOUR BRANCH
+  ----------------------
+
+Before working each day: `git pull origin main`
+
+If you’re on another branch: `git pull origin branch-name`
+
+  ---------------------------
+  MERGING (TEAM LEADS ONLY)
+  ---------------------------
+Switch to main: git checkout main
+Merge branch: git merge branch-name
+
+  ----------------
+  UNDOING THINGS
+  ----------------
+
+Unstage a file: git reset file.txt
+Discard local changes: git checkout – file.txt
+Undo last commit (careful): git reset –soft HEAD~1
+
+  ------------------
+  HELPFUL COMMANDS
+  ------------------
+
+See commit history: git log –oneline
+See differences: git diff
+See remote: git remote -v
+
+-----------
+EMERGENCY
+-----------
+If you’re confused or see errors: STOP and ask your team lead. Do NOT
+force push. Do NOT delete branches.
