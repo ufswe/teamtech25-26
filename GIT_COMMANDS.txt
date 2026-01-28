@@ -37,15 +37,13 @@ please ask your team lead, Cara or Elise. Please do not assume!
 You should ONLY create or switch branches if your team lead tells you
 to.
 
+To update branches: `git fetch --all`
+
 To check what branch you are on: `git branch`
 
 To switch to an existing branch: `git checkout branch-name`
 
-To create a new branch (ONLY if instructed): `git checkout -b
-new-branch-name`
-
-To push your branch to GitHub: `git push -u origin new-branch-name`
-(you must push YOUR branch to github before you can push TO your branch)
+To see all branches: `git branch -r`
 
   ----------------------
   UPDATING YOUR BRANCH
