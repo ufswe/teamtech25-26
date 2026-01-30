@@ -2,10 +2,11 @@ class Node:
     #Group 1 work on developing class
     
     #Public
-    def __init__(self, latitude, longitude, airport):
+    def __init__(self, latitude, longitude, airport, isOpen):
         self.latitude = latitude #latitude coordinate
         self.longitude = longitude #longitude coordinate
         self.airport = airport #boolean that indicates whether node is an airport or not
+        self.isOpen = isOpen #boolean that indicates whether node is available to fly or not
 
     def setLatitude(self, latitude):
         self.latitude = latitude
@@ -21,3 +22,9 @@ class Node:
         
     def getLongitude(self):
         return self.longitude
+    
+    def __hash__(self):
+        return hash((self.latitude, self.longitude))
+
+    def __eq__(self, other):
+        return (self.latitude, self.longitude) == (other.latitude, other.longitude)
