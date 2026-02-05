@@ -5,7 +5,7 @@ class cost:
     def __init__(self, src: Node, dest: Node):
         self.src = src
         self.dest = dest
-        # Paramters for Boeing 737 model (uncomment)
+        # Parameters for Boeing 737 model (uncomment)
 
         # self.k = 3.16 #C)2/kg fuel burned
         # self.fuel_mass_flow = 0.6075 #(kg/s)
@@ -13,18 +13,29 @@ class cost:
         # self.aircraft_weight = 
         # self.LD = #Lift-to-drag ratio at cruise 
 
-    # Using the Haversine equation to calcuate the distance between two points
+    # Using the Haversine equation to calculate the distance between two points
     # Output: distance (in Km)
+
+    def convert_to_radians(self):
+        # if given in DMS
+        # decimal_degrees = D + M/60 + S/3600
+        # radians = decimal_degrees * math.pi / 180
+        # return radians
+        
+        # if given in decimal degrees:
+        # radians= deg * math.pi / 180
+        # return radians
+
     def get_distance(self):
         pass
 
-    # first calcaute fuel mass, then calculate C02
+    # first calculate fuel mass, then calculate C02
     def get_carbon_emissions(self):
         pass 
     
     # Might use flight history for heatmap 
     # traffic 
-    def get_air_traffic_desity(self):
+    def get_air_traffic_density(self):
         pass 
 
 
