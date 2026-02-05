@@ -15,6 +15,17 @@ class cost:
 
     # Using the Haversine equation to calculate the distance between two points
     # Output: distance (in Km)
+
+    def convert_to_radians(self):
+        # if given in DMS
+        # decimal_degrees = D + M/60 + S/3600
+        # radians = decimal_degrees * math.pi / 180
+        # return radians
+        
+        # if given in decimal degrees:
+        # radians= deg * math.pi / 180
+        # return radians
+
     def get_distance(self):
         pass
 
