@@ -7,6 +7,7 @@ class Node:
         self.longitude = longitude #longitude coordinate
         self.airport = airport #boolean that indicates whether node is an airport or not
         self.isOpen = isOpen #boolean that indicates whether node is available to fly or not
+        self.radius = 5 #5 mile radius around the center point
 
     def setLatitude(self, latitude):
         self.latitude = latitude
