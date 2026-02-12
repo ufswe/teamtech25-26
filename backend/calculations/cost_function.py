@@ -7,6 +7,9 @@ class cost:
     def __init__(self, src: Node, dest: Node):
         self.src = src
         self.dest = dest
+        self.total_distance = 0
+        self.dist_btw_layers = 50
+        
         # Parameters for Boeing 737 model (uncomment)
 
         # self.k = 3.16 #C)2/kg fuel burned
@@ -20,6 +23,16 @@ class cost:
         #self.precipitation = #(inches)
         #self.lightning = #(miles)
         #self.time = #(hours)
+
+
+    def get_num_of_layers(self):
+
+        self.total_distance = self.get_distance(self.src.getLatitude(), self.src.getLongitutde(), 
+                                                self.dest.getLatitude(), self.dest.getLongitutde())
+        
+        return (self.total_distance / self.dist_btw_layers)
+
+
 
     # Using the Haversine equation to calculate the distance between two points
     # Output: distance (in Km)
