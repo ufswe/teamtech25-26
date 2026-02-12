@@ -7,6 +7,7 @@ class cost:
     def __init__(self, src: Node, dest: Node):
         self.src = src
         self.dest = dest
+        self.total_distance = 0;
         # Parameters for Boeing 737 model (uncomment)
 
         # self.k = 3.16 #C)2/kg fuel burned
@@ -14,6 +15,16 @@ class cost:
         # self.specific_fuel_consumption = #(kg of fuel/thrust/second)
         # self.aircraft_weight = 
         # self.LD = #Lift-to-drag ratio at cruise 
+
+
+    def get_num_of_layers(self):
+
+        self.total_distance = self.get_distance(self.src.get_latitude(), self.src.get_longitutde(), 
+                                                self.dest.get_latitude(), self.dest.get_longitutde())
+        
+        return (self.total_distance / 50)
+
+
 
     # Using the Haversine equation to calculate the distance between two points
     # Output: distance (in Km)
