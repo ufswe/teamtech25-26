@@ -23,6 +23,7 @@ class cost:
         #self.precipitation = #(inches)
         #self.lightning = #(miles)
         #self.time = #(hours)
+        #self.visibility = #(miles)
 
 
     def get_num_of_layers(self):
@@ -68,27 +69,24 @@ class cost:
         # tornado warning
         if wind >= 34:
             Warning = True
-
         # thunderstorm warning
         elif precipitation >= 1 and wind >= 50:
             Warning = True
-
         #winter storm warning
-        elif  (precipitation >= 6 and time >= 12) or (precipitation >= 9 and time >= 24):
+        elif  (precipitation >= 6 and time <= 12) or (precipitation >= 9 and time <= 24):
             Warning = True
-
         # blizzard warning
         elif wind >= 30 and precipitation >= 6:
             Warning = True
-
-        # high wind
+        # high wind warning
         elif (wind >= 35 and time >= 1) or (wind >= 50):
             Warning = True
-
         #airport weather warning
-        elif lightning >= 5 and wind >= 20:
+        elif lightning <= 5 and wind >= 20:
             Warning = True
-
+        #general warning 
+        elif visibility <= 3:
+            Warning = True
         else:
             Warning = False
 
