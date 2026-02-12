@@ -20,7 +20,7 @@ with open("airports.csv", newline="") as csvfile, open("converted_data.json", "w
         if not first_object:
             jsonfile.write(",\n")
 
-        jsonfile.write(f'"obj{counter}":')
+        jsonfile.write(f'"{row["iata"]}":')
         # convert current row (a dict) into JSON
         # and write directly into JSON file
         jsonfile.write(json.dumps(row))
