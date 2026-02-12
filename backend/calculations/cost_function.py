@@ -64,4 +64,32 @@ class cost:
         pass 
 
 
-    
+    def check_warning_status(self, wind, precipitation, lightning, time) -> bool:  
+        # tornado warning
+        if wind >= 34:
+            Warning = True
+
+        # thunderstorm warning
+        elif precipitation >= 1 and wind >= 50:
+            Warning = True
+
+        #winter storm warning
+        elif  (precipitation >= 6 and time >= 12) or (precipitation >= 9 and time >= 24):
+            Warning = True
+
+        # blizzard warning
+        elif wind >= 30 and precipitation >= 6:
+            Warning = True
+
+        # high wind
+        elif (wind >= 35 and time >= 1) or (wind >= 50):
+            Warning = True
+
+        #airport weather warning
+        elif lightning >= 5 and wind >= 20:
+            Warning = True
+
+        else:
+            Warning = False
+
+        return Warning
