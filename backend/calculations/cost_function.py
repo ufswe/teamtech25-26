@@ -13,7 +13,13 @@ class cost:
         # self.fuel_mass_flow = #(kg/s)
         # self.specific_fuel_consumption = #(kg of fuel/thrust/second)
         # self.aircraft_weight = 
-        # self.LD = #Lift-to-drag ratio at cruise 
+        # self.LD = #Lift-to-drag ratio at cruise
+
+        # weather risk bound variables
+        #self.wind = #(knots)
+        #self.precipitation = #(inches)
+        #self.lightning = #(miles)
+        #self.time = #(hours)
 
     # Using the Haversine equation to calculate the distance between two points
     # Output: distance (in Km)
