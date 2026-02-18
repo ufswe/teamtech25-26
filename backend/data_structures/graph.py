@@ -28,6 +28,18 @@ class Graph:
                            self._dp_table[neighbor] = (cost_to_neighbor, node)
            
 
+    def build_adjacency_list(self, _layers):
+        for i in range(len(_layers) - 1):
+            current_layer = _layers[i]
+            next_layer = _layers[i + 1]
+
+            for node in current_layer:
+                self._adjacency_list[node] = []
+                for next_node in next_layer:
+                    self._adjacency_list[node].append(next_node)
+        
+        return self._adjacency_list
+
 
 
 
