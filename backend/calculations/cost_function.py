@@ -24,6 +24,7 @@ class cost:
         #self.lightning = #(miles)
         #self.time = #(hours)
         #self.visibility = #(miles)
+        self.speed = 838 #average speed of a commercial airplane in km/h
 
 
     def get_num_of_layers(self):
@@ -91,3 +92,7 @@ class cost:
             Warning = False
 
         return Warning
+    
+    def time_of_flight(distance):
+        time = (distance/self.speed)/3600 #km/s
+        return time
