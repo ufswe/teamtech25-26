@@ -13,13 +13,13 @@ class cost:
         # Parameters for Boeing 737 model (uncomment)
 
         # self.k = 3.16 #C)2/kg fuel burned
-        # self.fuel_mass_flow =  (kg/s)
+        # self.fuel_mass_flow = self.specific_fuel_consumption * self.aircraft_weight/self.LD #(kg/s)
         # self.specific_fuel_consumption = 1.734*10^-7 #(kg of fuel/thrust/second)
         #self.g=9.81 #m/s^2
         # self.aircraft_mass_takeoff=79002 #kg
         #self.aircraft_mass_landing=66349 #kg
-        # self.aircraft_weight = self.aircraft_mass_takeoff * self.aircraft_mass_landing * self.g * .5 #N
-
+        # self.aircraft_weight = self.aircraft_mass_takeoff * self.aircraft_mass_landing* self.g * .5 #N
+        #self.LD = 18.1 #Lift to drag ratio
         # weather risk bound variables
         #self.wind = #(knots)
         #self.precipitation = #(inches)
