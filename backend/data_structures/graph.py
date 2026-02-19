@@ -26,6 +26,11 @@ class Graph:
                        cost_to_neighbor = getCost(node, neighbor) + self._dp_table[node][0] #cost to reach node + cost to reach neighbor from node
                        if cost_to_neighbor < self._dp_table[neighbor][0]:
                            self._dp_table[neighbor] = (cost_to_neighbor, node)
+                    else: #maybe?
+                        self._dp_table[neighbor] = (getCost(node, neighbor) + self._dp_table[node][0], node) #added this line check if its right
+                    #if its not in the self self.dp_table the cost hasn't been calculated so add it to the dp table as a new neighbor
+        return self._dp_table[end][0]  #return the minimum cost to reach the end node
+        #edit this to return the path as well --tuples
            
 
     def build_adjacency_list(self, _layers):
