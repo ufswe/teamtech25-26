@@ -14,10 +14,12 @@ class cost:
         # Parameters for Boeing 737 model (uncomment)
 
         # self.k = 3.16 #C)2/kg fuel burned
-        # self.fuel_mass_flow = #(kg/s)
-        # self.specific_fuel_consumption = #(kg of fuel/thrust/second)
-        # self.aircraft_weight = 
-        # self.LD = #Lift-to-drag ratio at cruise
+        # self.fuel_mass_flow =  (kg/s)
+        # self.specific_fuel_consumption = 1.734*10^-7 #(kg of fuel/thrust/second)
+        #self.g=9.81 #m/s^2
+        # self.aircraft_mass_takeoff=79002 #kg
+        #self.aircraft_mass_landing=66349 #kg
+        # self.aircraft_weight = self.aircraft_mass_takeoff * self.aircraft_mass_landing * self.g * .5 #N
 
         # weather risk bound variables
         #self.wind = #(knots)
@@ -29,8 +31,8 @@ class cost:
 
     def get_num_of_layers(self):
 
-        self.total_distance = self.get_distance(self.src.getLatitude(), self.src.getLongitutde(), 
-                                                self.dest.getLatitude(), self.dest.getLongitutde())
+        self.total_distance = self.get_distance(self.src.getLatitude(), self.src.getLongitude(), 
+                                                self.dest.getLatitude(), self.dest.getLongitude())
         
         return (self.total_distance / self.dist_btw_layers)
 
@@ -133,7 +135,7 @@ class cost:
         elif (wind >= 35 and time >= 1) or (wind >= 50):
             Warning = True
         #airport weather warning
-        elif lightning <= 5 and wind >= 20:
+        elif lightning >= 5 and wind >= 20:
             Warning = True
         #general warning 
         elif visibility <= 3:
