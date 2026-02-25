@@ -1,24 +1,20 @@
-import React, { useEffect, useState } from "react";
-import "./App.css";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Flight from "./pages/Flight";
+import useBackendStatus from "./hooks/useBackendStatus";
 
 function App() {
-  const [statusMessage, setStatusMessage] = useState("Checking connection...");
-
-  useEffect(() => {
-    fetch("http://localhost:5001/status")
-      .then((response) => response.json())
-      .then((data) => setStatusMessage(data.message))
-      .catch((error) => {
-        console.error("Error:", error);
-        setStatusMessage("❌ Failed to connect to backend");
-      });
-  }, []);
+  const statusMessage = useBackendStatus();
 
   return (
-    <div>
-      <h1>Team Tech Project 2025-26</h1>
-      <h2>{statusMessage}</h2>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Flight />} />
+      </Routes>
+
+      <div style={{ position: "fixed", bottom: 10, right: 10 }}>
+        {statusMessage}
+      </div>
+    </BrowserRouter>
   );
 }
 
