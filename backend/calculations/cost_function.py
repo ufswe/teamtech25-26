@@ -164,3 +164,7 @@ class cost:
             Warning = False
 
         return Warning
+    
+    def time_of_flight(distance):
+        time = (distance/self.speed)/3600 #km/s
+        return time
