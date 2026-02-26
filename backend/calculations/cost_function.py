@@ -28,7 +28,7 @@ class cost:
         # self.lightning = #(miles)
         # self.time = #(hours)
         # self.visibility = #(miles)
-
+        # self.altitude = #(feet)
 
     def get_num_of_layers(self):
 
@@ -64,15 +64,15 @@ class cost:
 
         return distance
     
-    def lat_long_to_cartesian(self, lat, lon,r=6371):
+    def lat_long_to_cartesian(self, lat, lon, r=6371):
 
         lat, lon = self.lat_long_to_radians(lat, lon)
         
-        x1 = r * np.cos(lat) * np.cos(lon)
-        y1 = r * np.cos(lat) * np.sin(lon)
-        z1 = r * np.sin(lat)
+        x = r * np.cos(lat) * np.cos(lon)
+        y = r * np.cos(lat) * np.sin(lon)
+        z = r * np.sin(lat)
 
-        cartesian_coordinates = [x1, y1, z1]
+        cartesian_coordinates = [x, y, z]
 
         return cartesian_coordinates
 
@@ -95,37 +95,51 @@ class cost:
 
     def get_nodes_per_layer(self):
 
-	# convert latitude longitude to cartesian
+	    # convert latitude longitude to cartesian
+        self.lat_long_to_cartesian()
 
-	# num_of_nodes=4
+        #create vector from source to destination
+        src_dest_vector = np.array[(lat2-lat1), (lon2-lon1)]
+        unit_vector = src_dest_vector / np.linalg.norm(src_dest_vector)
 
-	# dist_btw_nodes=5
+	    # num_of_nodes=4
+        num_of_nodes = 4
 
-	# dist_btw_layer=50
+	    # dist_btw_nodes=5
+        dist_btw_nodes = 5
 
-	# create a loop that will iterate from 0 to the number of layers-1
+	    # dist_btw_layer=50
+        dist_btw_layer = 50
 
-        # flight_progress = dist_btw_layer * i
+        node_array = np.array[]
 
-		# calculate orthogonal vector
+        node_network = np.array[]
+
+	        # create a loop that will iterate from 0 to the number of layers-1
+            for i in range (num_of_layers-1):
+                flight_progress = unit_vector * dist_btw_layer * i
+
+		        # calculate vector perpendicular to src_dest_vector and scale by dist_btw_nodes
+                layer_vector = np.array[-(flight_progress(1)), (flight_progress(0))]
 		
-		# find magnitude of layer vectors (multiply 2 x dist_btw_nodes)
+		        # calculate magnitude of layer vectors (multiply 2 x dist_btw_nodes)
+                
 		
-		# create a loop that will iterate from 0 to num_of_layers-1
+		        # create a loop that will iterate from 0 to num_of_layers-1
+                for i in range(-2, num_of_nodes-1):
+                    
+                    node = layer_vector * dist_btw_nodes * i
+                    
+                    # convert back to lat and long (call cartesian_to_lat_long function)
+                    node = self.cartesian_to_lat_long(node)
+                    
+			        # add the four calculated node values for each layer to an array
+                    node_array = np.append(node_array, node)
+                    
+			        # add the new array to a node network
+                    node_network = np.append(node_network, node_array)
 
-			# add node on the line (using flight_progress)
-
-			# scale the vector by negative 5 and -10
-
-            # convert back to lat and long (call cartesian_to_lat_long function)
-
-			# add the four calculated node values for each layer to an array
-
-			# add the new array to a node network
-
-	
-
-	# return node network
+	    return node_network
 
 
     # first calculate fuel mass, then calculate C02
