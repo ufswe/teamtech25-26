@@ -12,21 +12,22 @@ class cost:
         self.dist_btw_layers = 50
         
         # Parameters for Boeing 737 model (uncomment)
+        #C)2/kg fuel burned
 
-        # self.k = 3.16 #C)2/kg fuel burned
+        # self.k = 3.16 
         # self.fuel_mass_flow = self.specific_fuel_consumption * self.aircraft_weight/self.LD #(kg/s)
         # self.specific_fuel_consumption = 1.734*10^-7 #(kg of fuel/thrust/second)
-        #self.g=9.81 #m/s^2
+        # self.g= 9.81 #m/s^2
         # self.aircraft_mass_takeoff=79002 #kg
-        #self.aircraft_mass_landing=66349 #kg
+        # self.aircraft_mass_landing=66349 #kg
         # self.aircraft_weight = self.aircraft_mass_takeoff * self.aircraft_mass_landing* self.g * .5 #N
-        #self.LD = 18.1 #Lift to drag ratio
-        # weather risk bound variables
-        #self.wind = #(knots)
-        #self.precipitation = #(inches)
-        #self.lightning = #(miles)
-        #self.time = #(hours)
-        #self.visibility = #(miles)
+        # self.LD = 18.1 #Lift to drag ratio
+        #weather risk bound variables
+        # self.wind = #(knots)
+        # self.precipitation = #(inches)
+        # self.lightning = #(miles)
+        # self.time = #(hours)
+        # self.visibility = #(miles)
 
 
     def get_num_of_layers(self):
@@ -37,17 +38,19 @@ class cost:
         return (self.total_distance / self.dist_btw_layers)
 
 
-
     # Using the Haversine equation to calculate the distance between two points
     # Output: distance (in Km)
 
-    def lat_long_to_radians(self, lat1, lon1, lat2, lon2):
+    def lat_long_to_radians(self, lat, lon):
         # Convert latitude and longitude from degrees to radians (assume in decimal degrees)
-        lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
+        lat, lon = map(math.radians, [lat, lon])
 
-        return lat1, lon1, lat2, lon2
+        return lat, lon
 
     def get_distance(self, lat1, lon1, lat2, lon2):
+        
+        lat1, lon1 = self.lat_long_to_radians(lat1, lon1)
+        lat2, lon2 = self.lat_long_to_radians(lat2, lon2)
 
         # Haversine formula
         dlat = lat2 - lat1
@@ -61,23 +64,38 @@ class cost:
 
         return distance
     
-    def lat_long_to_cartesian():
-    # pull lat_long
+    def lat_long_to_cartesian(self, lat, lon,r=6371):
 
-    # do math & make new vector (cartesian_src_dest)
-    # return cartesian_src_dest
+        lat, lon = self.lat_long_to_radians(lat, lon)
+        
+        x1 = r * np.cos(lat) * np.cos(lon)
+        y1 = r * np.cos(lat) * np.sin(lon)
+        z1 = r * np.sin(lat)
+
+        cartesian_coordinates = [x1, y1, z1]
+
+        return cartesian_coordinates
+
+    
+    def cartesian_to_lat_long(self, x, y, z):
+        # Calculate the radius
+        r = np.sqrt(x**2 + y**2 + z**2)
+        
+        # Calculate latitude and longitude
+        lat = np.arcsin(z / r)  # latitude in radians
+        lon = np.arctan2(y, x)  # longitude in radians
+
+        # Convert back to degrees
+        lat_deg = np.degrees(lat)
+        lon_deg = np.degrees(lon)
+
+        return lat_deg, lon_deg
+    
 
 
-    def cartesian_to_lat_long():
-	# pull cartesian
+    def get_nodes_per_layer(self):
 
-	# do math & make new vector (lat_long_src_dest)
-    # return lat_long_src_dest
-
-
-    def get_nodes_per_layer():
-
-	# convert from spherical to cartesian, call spherical_to_cartesian()
+	# convert latitude longitude to cartesian
 
 	# num_of_nodes=4
 
@@ -87,17 +105,19 @@ class cost:
 
 	# create a loop that will iterate from 0 to the number of layers-1
 
+        # flight_progress = dist_btw_layer * i
+
 		# calculate orthogonal vector
 		
 		# find magnitude of layer vectors (multiply 2 x dist_btw_nodes)
 		
-		# create a loop that will iterate from 0 to num_of_nodes-1
+		# create a loop that will iterate from 0 to num_of_layers-1
 
-			# add node on the line
+			# add node on the line (using flight_progress)
 
-			# add 
+			# scale the vector by negative 5 and -10
 
-			# multiply the two calculated node values by -1
+            # convert back to lat and long (call cartesian_to_lat_long function)
 
 			# add the four calculated node values for each layer to an array
 
