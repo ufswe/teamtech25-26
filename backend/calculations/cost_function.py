@@ -2,6 +2,8 @@ from turtle import distance
 from ..data_structures.node import Node
 import math
 import numpy as np
+import requests
+from collections import defaultdict
 """
 To run, call this from teamtech25-26 root folder
 use: python -m backend.calculations.cost_function
