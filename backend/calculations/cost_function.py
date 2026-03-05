@@ -43,62 +43,6 @@ class cost:
 
         return num_of_layers
 
-
-    # Using the Haversine equation to calculate the distance between two points
-    # Output: distance (in Km)
-
-    def lat_long_to_radians(self, lat, lon):
-        # Convert latitude and longitude from degrees to radians (assume in decimal degrees)
-        lat, lon = map(math.radians, [lat, lon])
-
-        return lat, lon
-
-    def get_distance(self, lat1, lon1, lat2, lon2):
-        
-        lat1, lon1 = self.lat_long_to_radians(lat1, lon1)
-        lat2, lon2 = self.lat_long_to_radians(lat2, lon2)
-
-        # Haversine formula
-        dlat = lat2 - lat1
-        dlon = lon2 - lon1
-        a = math.sin(dlat / 2) ** 2 + math.cos(lat1)*math.cos(lat2)*math.sin(dlon/2) ** 2
-        c = 2*math.asin(math.sqrt(a))
-
-        # Radius of earth in kilometers
-        r = 6371
-        distance = c*r
-
-        return distance
-    
-    def lat_long_to_cartesian(self, lat, lon, r=6371):
-
-        lat, lon = self.lat_long_to_radians(lat, lon)
-        
-        x = r * np.cos(lat) * np.cos(lon)
-        y = r * np.cos(lat) * np.sin(lon)
-        z = r * np.sin(lat)
-
-        cartesian_coordinates = [x, y, z]
-
-        return cartesian_coordinates
-
-    
-    def cartesian_to_lat_long(self, x, y, z):
-        # Calculate the radius
-        r = np.sqrt(x**2 + y**2 + z**2)
-        
-        # Calculate latitude and longitude
-        lat = np.arcsin(z / r)  # latitude in radians
-        lon = np.arctan2(y, x)  # longitude in radians
-
-        # Convert back to degrees
-        lat_deg = np.degrees(lat)
-        lon_deg = np.degrees(lon)
-
-        return lat_deg, lon_deg
-    
-
-
     def get_nodes_per_layer(self, lat1, lon1, lat2, lon2, num_of_layers):
 
         # convert latitude longitude to cartesian
@@ -167,7 +111,62 @@ class cost:
 
         return node_network
 
+    # helper functions 
+    def lat_long_to_radians(self, lat, lon):
+        # Convert latitude and longitude from degrees to radians (assume in decimal degrees)
+        lat, lon = map(math.radians, [lat, lon])
 
+        return lat, lon
+    
+    def lat_long_to_cartesian(self, lat, lon, r=6371):
+
+        lat, lon = self.lat_long_to_radians(lat, lon)
+        
+        x = r * np.cos(lat) * np.cos(lon)
+        y = r * np.cos(lat) * np.sin(lon)
+        z = r * np.sin(lat)
+
+        cartesian_coordinates = [x, y, z]
+
+        return cartesian_coordinates
+
+    
+    def cartesian_to_lat_long(self, x, y, z):
+        # Calculate the radius
+        r = np.sqrt(x**2 + y**2 + z**2)
+        
+        # Calculate latitude and longitude
+        lat = np.arcsin(z / r)  # latitude in radians
+        lon = np.arctan2(y, x)  # longitude in radians
+
+        # Convert back to degrees
+        lat_deg = np.degrees(lat)
+        lon_deg = np.degrees(lon)
+
+        return lat_deg, lon_deg
+    
+
+    # Cost function calcs
+
+    # Using the Haversine equation to calculate the distance between two points
+    # Output: distance (in Km)
+    def get_distance(self, lat1, lon1, lat2, lon2):
+        
+        lat1, lon1 = self.lat_long_to_radians(lat1, lon1)
+        lat2, lon2 = self.lat_long_to_radians(lat2, lon2)
+
+        # Haversine formula
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+        a = math.sin(dlat / 2) ** 2 + math.cos(lat1)*math.cos(lat2)*math.sin(dlon/2) ** 2
+        c = 2*math.asin(math.sqrt(a))
+
+        # Radius of earth in kilometers
+        r = 6371
+        distance = c*r
+
+        return distance
+    
     # first calculate fuel mass, then calculate C02
     def get_carbon_emissions(self):
         pass 
@@ -205,14 +204,33 @@ class cost:
 
         return Warning
     
-    def time_of_flight(distance):
+    def time_of_flight(self,distance):
         time = (distance/self.speed)/3600 #km/s
         return time
 
+    # returns overall cost 
+    def get_total_cost(self):
+        #Placeholder for now 
+        distance = 0 # lower the better
+        time = 0 # lower the better 
+        collision_density = 0 # calcuated using heatmap (collision risk, so the lower, the better) 
+        carbon_emissions = 0
 
+        w1 = 0.25
+        w2 = 0.25 
+        w3 = 0.35 
+        w4 = 0.25 
+
+        return (w1 * distance + w2 * time + w3 * collision_density + w4 * carbon_emissions)
+
+
+
+
+
+# For testing------Ignore
 c = cost(None, None)
 
-layers = 68  
+layers = 2  
 
 node_network = c.get_nodes_per_layer(
     29.687330584,-82.269665588,
