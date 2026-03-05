@@ -1,24 +1,84 @@
 import queue
 import heapq
-'''
-questions:
-are we still using dijkstra's algorithm??
-recommendations on how to split up backend who work on what
-'''
+
+
 class Graph:
     def __init__(self):
         self._adjacency_list = {} #store nodes to all neighbors
         self._layers = {} #{[source_air],[node_a, node_b],[node_c, node_d],[destination]}
-        self.dp_table = {} #{node: (minimum_cost_to_reach_node, parent_node),...}
+        self._dp_table = {} #{node: (minimum_cost_to_reach_node, parent_node),...}
+
 
     def add_vertex(self, node, cost):
         pass
+
+    def min_cost_path(self, start, end):
+       self._dp_table[start] = (0, None)  #node -> (cost to reach node, parent node)
+
+
+       for i in range(0, len(self._layers) - 1 ):
+           for node in self._layers[i]:
+               self._dp_table[node] = (float('inf'), None)  #Initialize cost to reach node as infinity
+               for neighbor in self._adjacency_list.get(node, []):
+                   if neighbor in self._dp_table:
+                       #getCost function from calculations
+                       cost_to_neighbor = getCost(node, neighbor) + self._dp_table[node][0] #cost to reach node + cost to reach neighbor from node
+                       if cost_to_neighbor < self._dp_table[neighbor][0]:
+                           self._dp_table[neighbor] = (cost_to_neighbor, node)
+                       else: #maybe?
+                            self._dp_table[neighbor] = (getCost(node, neighbor) + self._dp_table[node][0], node) #added this line check if its right
+                    #if its not in the self self.dp_table the cost hasn't been calculated so add it to the dp table as a new neighbor
+       return self._dp_table[end][0]  #return the minimum cost to reach the end node
+        #edit this to return the path as well --tuples
+           
+
+    def build_adjacency_list(self, _layers):
+        for i in range(len(_layers) - 1):
+            current_layer = _layers[i]
+            next_layer = _layers[i + 1]
+
+            for node in current_layer:
+                self._adjacency_list[node] = []
+                for next_node in next_layer:
+                    self._adjacency_list[node].append(next_node)
+        
+        return self._adjacency_list
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def dijkstra(self, start, end):
        dist = {node: float('inf') for node in self._adjacency_list}
        dist[start] = 0
        prev = {node: None for node in self._adjacency_list}
        pq = [(0, start)]
+
 
        while pq:
            current_dist, current_node = heapq.heappop(pq)
@@ -27,8 +87,10 @@ class Graph:
            if current_dist > dist[current_node]:
                continue
 
+
            for neighbor, weight in self._adjacency_list[current_node].items():
                new_distance = current_dist + weight['weight']
+
 
                if new_distance < dist[neighbor]:
                    dist[neighbor] = new_distance
@@ -36,12 +98,15 @@ class Graph:
                    heapq.heappush(pq, (new_distance, neighbor))
        return dist
 
+
     def isConnected(self, node1, node2):
        visited = set()
        q = queue.Queue(maxsize=-1) #initializes size to infinity?
 
+
        visited.add(node1)
        q.put(node1)
+
 
        while not q.empty():
            u = q.queue[0]  #this is similar to peek
