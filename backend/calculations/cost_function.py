@@ -1,8 +1,12 @@
 from turtle import distance
-from backend.data_structures.node import Node
+from ..data_structures.node import Node
 import math
 import numpy as np
+"""
+To run, call this from teamtech25-26 root folder
+use: python -m backend.calculations.cost_function
 
+"""
 class cost:
 
     def __init__(self, src: Node, dest: Node):
@@ -98,12 +102,27 @@ class cost:
     def get_nodes_per_layer(self, lat1, lon1, lat2, lon2, num_of_layers):
 
         # convert latitude longitude to cartesian
-        lat1, lon1, lat2, lon2 = self.lat_long_to_cartesian(lat1, lon1, lat2, lon2)
+
+        x1, y1, z1 = self.lat_long_to_cartesian(lat1, lon1)
+        x2, y2, z2 = self.lat_long_to_cartesian(lat2, lon2)
+
+       # lat1, lon1, lat2, lon2 = self.lat_long_to_cartesian(lat1, lon1),  self.lat_long_to_cartesian(lat2, lon2)
 
         #create vector from source to destination
-        src_dest_vector = np.array([(lat2-lat1), (lon2-lon1)])
+        src = np.array([x1, y1, z1])
+        dest = np.array([x2, y2, z2])
+
+        src_dest_vector = dest - src
+
         unit_vector = src_dest_vector / np.linalg.norm(src_dest_vector)
 
+        # calculating the perpecducular vector 
+
+        up = np.array([0, 0, 1]) # just using this for cross porduct, just points up 
+        perp_vector = np.cross(unit_vector, up)
+        perp_vector = perp_vector / np.linalg.norm(perp_vector) # normalinze vector to become 1
+
+    
         # num_of_nodes=4
         num_of_nodes = 4
 
@@ -113,32 +132,37 @@ class cost:
         # dist_btw_layer=50
         dist_btw_layer = 50
 
-        node_array = np.array([])
+        # node_array = np.array([])
 
-        node_network = np.array([])
+        node_network = []
 
         # create a loop that will iterate from 0 to the number of layers-1
-        for i in range (num_of_layers-1):
-            flight_progress = unit_vector * dist_btw_layer * i
+        # shoudl iterate from 1, because layer 0 is the src point
 
-            # calculate vector perpendicular to src_dest_vector and scale by dist_btw_nodes
-            layer_vector = np.array([-(flight_progress[1]), (flight_progress[0])])
+        for i in range (1, num_of_layers):
+            flight_progress = unit_vector * dist_btw_layer * i
+            layer_center = src + (flight_progress) # basically moving the central point by the distance along the untit_distance vector
+            
+            # # calculate vector perpendicular to src_dest_vector and scale by dist_btw_nodes
+            # layer_vector = np.array([-(flight_progress[1]), (flight_progress[0])])
             
             # calculate magnitude of layer vectors (multiply 2 x dist_btw_nodes)
             
             # create a loop that will iterate from 0 to num_of_layers-1
-            for i in range(-2, num_of_nodes-1):
+
+            layer_nodes = []
+            for j in range(-2, num_of_nodes-1):
                     
-                node = layer_vector * dist_btw_nodes * i
-                    
+                node_cart = layer_center + perp_vector * dist_btw_nodes * j #scaling up and down from cetner
+                
                 # convert back to lat and long (call cartesian_to_lat_long function)
-                node = self.cartesian_to_lat_long(node)
+                lat, long = self.cartesian_to_lat_long(node_cart[0], node_cart[1], node_cart[2])
                     
                 # add the four calculated node values for each layer to an array
-                node_array = np.append(node_array, node)
+                layer_nodes.append((lat, long))
                     
                 # add the new array to a node network
-                node_network = np.append(node_network, node_array)
+            node_network.append(layer_nodes)
 
 
         return node_network
