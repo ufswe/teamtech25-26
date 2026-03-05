@@ -35,7 +35,9 @@ class cost:
         self.total_distance = self.get_distance(self.src.getLatitude(), self.src.getLongitude(), 
                                                 self.dest.getLatitude(), self.dest.getLongitude())
         
-        return (self.total_distance / self.dist_btw_layers)
+        num_of_layers = (self.total_distance / self.dist_btw_layers)
+
+        return num_of_layers
 
 
     # Using the Haversine equation to calculate the distance between two points
@@ -93,53 +95,53 @@ class cost:
     
 
 
-    def get_nodes_per_layer(self):
+    def get_nodes_per_layer(self, lat1, lon1, lat2, lon2, num_of_layers):
 
-	    # convert latitude longitude to cartesian
-        self.lat_long_to_cartesian()
+        # convert latitude longitude to cartesian
+        lat1, lon1, lat2, lon2 = self.lat_long_to_cartesian(lat1, lon1, lat2, lon2)
 
         #create vector from source to destination
-        src_dest_vector = np.array[(lat2-lat1), (lon2-lon1)]
+        src_dest_vector = np.array([(lat2-lat1), (lon2-lon1)])
         unit_vector = src_dest_vector / np.linalg.norm(src_dest_vector)
 
-	    # num_of_nodes=4
+        # num_of_nodes=4
         num_of_nodes = 4
 
-	    # dist_btw_nodes=5
+        # dist_btw_nodes=5
         dist_btw_nodes = 5
 
-	    # dist_btw_layer=50
+        # dist_btw_layer=50
         dist_btw_layer = 50
 
-        node_array = np.array[]
+        node_array = np.array([])
 
-        node_network = np.array[]
+        node_network = np.array([])
 
-	        # create a loop that will iterate from 0 to the number of layers-1
-            for i in range (num_of_layers-1):
-                flight_progress = unit_vector * dist_btw_layer * i
+        # create a loop that will iterate from 0 to the number of layers-1
+        for i in range (num_of_layers-1):
+            flight_progress = unit_vector * dist_btw_layer * i
 
-		        # calculate vector perpendicular to src_dest_vector and scale by dist_btw_nodes
-                layer_vector = np.array[-(flight_progress(1)), (flight_progress(0))]
-		
-		        # calculate magnitude of layer vectors (multiply 2 x dist_btw_nodes)
-                
-		
-		        # create a loop that will iterate from 0 to num_of_layers-1
-                for i in range(-2, num_of_nodes-1):
+            # calculate vector perpendicular to src_dest_vector and scale by dist_btw_nodes
+            layer_vector = np.array([-(flight_progress[1]), (flight_progress[0])])
+            
+            # calculate magnitude of layer vectors (multiply 2 x dist_btw_nodes)
+            
+            # create a loop that will iterate from 0 to num_of_layers-1
+            for i in range(-2, num_of_nodes-1):
                     
-                    node = layer_vector * dist_btw_nodes * i
+                node = layer_vector * dist_btw_nodes * i
                     
-                    # convert back to lat and long (call cartesian_to_lat_long function)
-                    node = self.cartesian_to_lat_long(node)
+                # convert back to lat and long (call cartesian_to_lat_long function)
+                node = self.cartesian_to_lat_long(node)
                     
-			        # add the four calculated node values for each layer to an array
-                    node_array = np.append(node_array, node)
+                # add the four calculated node values for each layer to an array
+                node_array = np.append(node_array, node)
                     
-			        # add the new array to a node network
-                    node_network = np.append(node_network, node_array)
+                # add the new array to a node network
+                node_network = np.append(node_network, node_array)
 
-	    return node_network
+
+        return node_network
 
 
     # first calculate fuel mass, then calculate C02
@@ -182,3 +184,17 @@ class cost:
     def time_of_flight(distance):
         time = (distance/self.speed)/3600 #km/s
         return time
+
+
+c = cost(None, None)
+
+layers = 68  
+
+node_network = c.get_nodes_per_layer(
+    29.687330584,-82.269665588,
+    33.942791, -118.410042,
+    layers
+)
+
+print(node_network)
+
