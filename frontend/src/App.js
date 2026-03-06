@@ -11,9 +11,9 @@ function App() {
         <Route path="/" element={<Flight />} />
       </Routes>
 
-      <div style={{ position: "fixed", bottom: 10, right: 10 }}>
+      {/* <div style={{ position: "fixed", bottom: 10, right: 10 }}>
         {statusMessage}
-      </div>
+      </div> */}
     </BrowserRouter>
   );
 }
