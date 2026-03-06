@@ -174,9 +174,39 @@ class cost:
         pass 
     
     # Might use flight history for heatmap 
-    # traffic 
-    def get_air_traffic_desity(self):
-        pass 
+    # traffic
+    def fetch_aircraft_near_point(self, lat: float, lon:float, radius_nm: int=100, timeout_s: int=10) -> list:
+        if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+            raise ValueError("Invalid latitude or longitude")
+        if not (0 < radius_nm <= 250):
+            raise ValueError("Radius must be between 1 and 250 nautical miles")
+        
+        url= f"https://api.adsb.lol/v2/point/{lat}/{lon}/{radius_nm}"
+        r= requests.get(url, timeout=timeout_s)
+        r.raise_for_status()
+        data = r.json()
+        return data.get("ac", [])
+    
+    def get_air_traffic_density(self, radius_nm: int=100, cell_degree: float=0.25) -> dict:
+        src_lat=self.src.getLatitude()
+        src_lon=self.src.getLongitude()
+        aircraft_list = self.fetch_aircraft_near_point(src_lat, src_lon, radius_nm)
+        bins=defaultdict(int)
+        for ac in aircraft_list:
+            lat=ac.get("lat")
+            lon=ac.get("lon")
+            hex_id=ac.get("hex")
+            if lat is None or lon is None or hex_id is None:
+                continue
+            cell_lat=math.floor(lat/cell_degree)*cell_degree
+            cell_lon=math.floor(lon/cell_degree)*cell_degree
+            bins[(round(cell_lat, 5), round(cell_lon, 5))]+=1
+
+        return dict(bins)
+    def get_collision_density(self, radius_nm: int=100, cell_degree: float=0.25) -> dict:
+        bins=self.get_air_traffic_density(radius_nm, cell_degree)
+        return sum(bins.values()) 
+    
 
 
     def check_warning_status(self, wind, precipitation, lightning, time) -> bool:  
@@ -215,7 +245,7 @@ class cost:
         #Placeholder for now 
         distance = 0 # lower the better
         time = 0 # lower the better 
-        collision_density = 0 # calcuated using heatmap (collision risk, so the lower, the better) 
+        collision_density = self.get_collision_density() # lower the better
         carbon_emissions = 0
 
         w1 = 0.25
