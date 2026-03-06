@@ -2,7 +2,6 @@ from turtle import distance
 from ..data_structures.node import Node
 import math
 import numpy as np
-import requests
 from collections import defaultdict
 """
 To run, call this from teamtech25-26 root folder
@@ -203,7 +202,7 @@ class cost:
             bins[(round(cell_lat, 5), round(cell_lon, 5))]+=1
 
         return dict(bins)
-    def get_collision_density(self, radius_nm: int=100, cell_degree: float=0.25) -> dict:
+    def get_collision_density_score(self, radius_nm: int=100, cell_degree: float=0.25) -> dict:
         bins=self.get_air_traffic_density(radius_nm, cell_degree)
         return sum(bins.values()) 
     
@@ -245,7 +244,7 @@ class cost:
         #Placeholder for now 
         distance = 0 # lower the better
         time = 0 # lower the better 
-        collision_density = self.get_collision_density() # lower the better
+        collision_density = self.get_collision_density_score()
         carbon_emissions = 0
 
         w1 = 0.25
@@ -271,4 +270,6 @@ node_network = c.get_nodes_per_layer(
 )
 
 print(node_network)
+
+
 
