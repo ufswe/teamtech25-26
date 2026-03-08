@@ -3,6 +3,7 @@ from ..data_structures.node import Node
 import math
 import numpy as np
 from collections import defaultdict
+import requests
 """
 To run, call this from teamtech25-26 root folder
 use: python -m backend.calculations.cost_function
@@ -202,7 +203,7 @@ class cost:
             bins[(round(cell_lat, 5), round(cell_lon, 5))]+=1
 
         return dict(bins)
-    def get_collision_density_score(self, radius_nm: int=100, cell_degree: float=0.25) -> dict:
+    def get_collision_density_score(self, radius_nm: int=100, cell_degree: float=0.25) -> int:
         bins=self.get_air_traffic_density(radius_nm, cell_degree)
         return sum(bins.values()) 
     
@@ -259,8 +260,6 @@ class cost:
 
 
 # For testing------Ignore
-c = cost(None, None)
-
 layers = 2  
 
 node_network = c.get_nodes_per_layer(
