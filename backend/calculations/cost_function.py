@@ -1,8 +1,14 @@
 from turtle import distance
-from data_structures.node import Node
+from ..data_structures.node import Node
 import math
 import numpy as np
+from collections import defaultdict
+import requests
+"""
+To run, call this from teamtech25-26 root folder
+use: python -m backend.calculations.cost_function
 
+"""
 class cost:
 
     def __init__(self, src: Node, dest: Node):
@@ -39,32 +45,80 @@ class cost:
 
         return num_of_layers
 
+    def get_nodes_per_layer(self, lat1, lon1, lat2, lon2, num_of_layers):
 
-    # Using the Haversine equation to calculate the distance between two points
-    # Output: distance (in Km)
+        # convert latitude longitude to cartesian
 
+        x1, y1, z1 = self.lat_long_to_cartesian(lat1, lon1)
+        x2, y2, z2 = self.lat_long_to_cartesian(lat2, lon2)
+
+       # lat1, lon1, lat2, lon2 = self.lat_long_to_cartesian(lat1, lon1),  self.lat_long_to_cartesian(lat2, lon2)
+
+        #create vector from source to destination
+        src = np.array([x1, y1, z1])
+        dest = np.array([x2, y2, z2])
+
+        src_dest_vector = dest - src
+
+        unit_vector = src_dest_vector / np.linalg.norm(src_dest_vector)
+
+        # calculating the perpecducular vector 
+
+        up = np.array([0, 0, 1]) # just using this for cross porduct, just points up 
+        perp_vector = np.cross(unit_vector, up)
+        perp_vector = perp_vector / np.linalg.norm(perp_vector) # normalinze vector to become 1
+
+    
+        # num_of_nodes=4
+        num_of_nodes = 4
+
+        # dist_btw_nodes=5
+        dist_btw_nodes = 5
+
+        # dist_btw_layer=50
+        dist_btw_layer = 50
+
+        # node_array = np.array([])
+
+        node_network = []
+
+        # create a loop that will iterate from 0 to the number of layers-1
+        # shoudl iterate from 1, because layer 0 is the src point
+
+        for i in range (1, num_of_layers):
+            flight_progress = unit_vector * dist_btw_layer * i
+            layer_center = src + (flight_progress) # basically moving the central point by the distance along the untit_distance vector
+            
+            # # calculate vector perpendicular to src_dest_vector and scale by dist_btw_nodes
+            # layer_vector = np.array([-(flight_progress[1]), (flight_progress[0])])
+            
+            # calculate magnitude of layer vectors (multiply 2 x dist_btw_nodes)
+            
+            # create a loop that will iterate from 0 to num_of_layers-1
+
+            layer_nodes = []
+            for j in range(-2, num_of_nodes-1):
+                    
+                node_cart = layer_center + perp_vector * dist_btw_nodes * j #scaling up and down from cetner
+                
+                # convert back to lat and long (call cartesian_to_lat_long function)
+                lat, long = self.cartesian_to_lat_long(node_cart[0], node_cart[1], node_cart[2])
+                    
+                # add the four calculated node values for each layer to an array
+                layer_nodes.append((lat, long))
+                    
+                # add the new array to a node network
+            node_network.append(layer_nodes)
+
+
+        return node_network
+
+    # helper functions 
     def lat_long_to_radians(self, lat, lon):
         # Convert latitude and longitude from degrees to radians (assume in decimal degrees)
         lat, lon = map(math.radians, [lat, lon])
 
         return lat, lon
-
-    def get_distance(self, lat1, lon1, lat2, lon2):
-        
-        lat1, lon1 = self.lat_long_to_radians(lat1, lon1)
-        lat2, lon2 = self.lat_long_to_radians(lat2, lon2)
-
-        # Haversine formula
-        dlat = lat2 - lat1
-        dlon = lon2 - lon1
-        a = math.sin(dlat / 2) ** 2 + math.cos(lat1)*math.cos(lat2)*math.sin(dlon/2) ** 2
-        c = 2*math.asin(math.sqrt(a))
-
-        # Radius of earth in kilometers
-        r = 6371
-        distance = c*r
-
-        return distance
     
     def lat_long_to_cartesian(self, lat, lon, r=6371):
 
@@ -94,64 +148,65 @@ class cost:
         return lat_deg, lon_deg
     
 
+    # Cost function calcs
 
-    def get_nodes_per_layer(self, lat1, lon1, lat2, lon2, num_of_layers):
+    # Using the Haversine equation to calculate the distance between two points
+    # Output: distance (in Km)
+    def get_distance(self, lat1, lon1, lat2, lon2):
+        
+        lat1, lon1 = self.lat_long_to_radians(lat1, lon1)
+        lat2, lon2 = self.lat_long_to_radians(lat2, lon2)
 
-        # convert latitude longitude to cartesian
-        lat1, lon1, lat2, lon2 = self.lat_long_to_cartesian(lat1, lon1, lat2, lon2)
+        # Haversine formula
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+        a = math.sin(dlat / 2) ** 2 + math.cos(lat1)*math.cos(lat2)*math.sin(dlon/2) ** 2
+        c = 2*math.asin(math.sqrt(a))
 
-        #create vector from source to destination
-        src_dest_vector = np.array([(lat2-lat1), (lon2-lon1)])
-        unit_vector = src_dest_vector / np.linalg.norm(src_dest_vector)
+        # Radius of earth in kilometers
+        r = 6371
+        distance = c*r
 
-        # num_of_nodes=4
-        num_of_nodes = 4
-
-        # dist_btw_nodes=5
-        dist_btw_nodes = 5
-
-        # dist_btw_layer=50
-        dist_btw_layer = 50
-
-        node_array = np.array([])
-
-        node_network = np.array([])
-
-        # create a loop that will iterate from 0 to the number of layers-1
-        for i in range (num_of_layers-1):
-            flight_progress = unit_vector * dist_btw_layer * i
-
-            # calculate vector perpendicular to src_dest_vector and scale by dist_btw_nodes
-            layer_vector = np.array([-(flight_progress[1]), (flight_progress[0])])
-            
-            # calculate magnitude of layer vectors (multiply 2 x dist_btw_nodes)
-            
-            # create a loop that will iterate from 0 to num_of_layers-1
-            for i in range(-2, num_of_nodes-1):
-                    
-                node = layer_vector * dist_btw_nodes * i
-                    
-                # convert back to lat and long (call cartesian_to_lat_long function)
-                node = self.cartesian_to_lat_long(node)
-                    
-                # add the four calculated node values for each layer to an array
-                node_array = np.append(node_array, node)
-                    
-                # add the new array to a node network
-                node_network = np.append(node_network, node_array)
-
-
-        return node_network
-
-
+        return distance
+    
     # first calculate fuel mass, then calculate C02
     def get_carbon_emissions(self):
         pass 
     
     # Might use flight history for heatmap 
-    # traffic 
-    def get_air_traffic_desity(self):
-        pass 
+    # traffic
+    def fetch_aircraft_near_point(self, lat: float, lon:float, radius_nm: int=100, timeout_s: int=10) -> list:
+        if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+            raise ValueError("Invalid latitude or longitude")
+        if not (0 < radius_nm <= 250):
+            raise ValueError("Radius must be between 1 and 250 nautical miles")
+        
+        url= f"https://api.adsb.lol/v2/point/{lat}/{lon}/{radius_nm}"
+        r= requests.get(url, timeout=timeout_s)
+        r.raise_for_status()
+        data = r.json()
+        return data.get("ac", [])
+    
+    def get_air_traffic_density(self, radius_nm: int=100, cell_degree: float=0.25) -> dict:
+        src_lat=self.src.getLatitude()
+        src_lon=self.src.getLongitude()
+        aircraft_list = self.fetch_aircraft_near_point(src_lat, src_lon, radius_nm)
+        bins=defaultdict(int)
+        for ac in aircraft_list:
+            lat=ac.get("lat")
+            lon=ac.get("lon")
+            hex_id=ac.get("hex")
+            if lat is None or lon is None or hex_id is None:
+                continue
+            cell_lat=math.floor(lat/cell_degree)*cell_degree
+            cell_lon=math.floor(lon/cell_degree)*cell_degree
+            bins[(round(cell_lat, 5), round(cell_lon, 5))]+=1
+
+        return dict(bins)
+    def get_collision_density_score(self, radius_nm: int=100, cell_degree: float=0.25) -> int:
+        bins=self.get_air_traffic_density(radius_nm, cell_degree)
+        return sum(bins.values()) 
+    
 
 
     def check_warning_status(self, wind, precipitation, lightning, time) -> bool:  
@@ -181,14 +236,31 @@ class cost:
 
         return Warning
     
-    def time_of_flight(distance):
+    def time_of_flight(self,distance):
         time = (distance/self.speed)/3600 #km/s
         return time
 
+    # returns overall cost 
+    def get_total_cost(self):
+        #Placeholder for now 
+        distance = 0 # lower the better
+        time = 0 # lower the better 
+        collision_density = self.get_collision_density_score()
+        carbon_emissions = 0
 
-c = cost(None, None)
+        w1 = 0.25
+        w2 = 0.25 
+        w3 = 0.35 
+        w4 = 0.25 
 
-layers = 68  
+        return (w1 * distance + w2 * time + w3 * collision_density + w4 * carbon_emissions)
+
+
+
+
+
+# For testing------Ignore
+layers = 2  
 
 node_network = c.get_nodes_per_layer(
     29.687330584,-82.269665588,
@@ -197,4 +269,6 @@ node_network = c.get_nodes_per_layer(
 )
 
 print(node_network)
+
+
 
