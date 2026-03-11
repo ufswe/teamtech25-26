@@ -8,7 +8,6 @@ import Card from "../components/Card.jsx";
 import Input from "../components/Input.jsx";
 import Knob from "../components/Knob.jsx";
 
-
 export default function Flight() {
 
   const [deptAirport, setDeptAirport] = useState();
@@ -65,6 +64,10 @@ export default function Flight() {
             <div className="time-input-wrapper">
               <p>Display time after calculation?</p>
             </div>
+            <Button
+              label="Enter"
+              placeholder="Enter"
+            />
           </div>
         </div>
 
