@@ -1,5 +1,5 @@
 from turtle import distance
-from backend.data_structures.node import Node
+from data_structures.node import Node
 import math
 import numpy as np
 
