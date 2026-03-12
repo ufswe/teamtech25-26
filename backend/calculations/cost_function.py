@@ -260,11 +260,11 @@ class cost:
 
 
 # For testing------Ignore
-layers = 2  
+layers = 4  
 
 node_network = c.get_nodes_per_layer(
-    29.687330584,-82.269665588,
-    33.942791, -118.410042,
+    0, 0,
+    0, 200,
     layers
 )
 
