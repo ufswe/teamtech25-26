@@ -9,7 +9,7 @@ To run, call this from teamtech25-26 root folder
 use: python -m backend.calculations.cost_function
 
 """
-class cost:
+class Cost:
 
     def __init__(self, src: Node, dest: Node):
         self.src = src #in lat and long
@@ -260,12 +260,14 @@ class cost:
 
 
 # For testing------Ignore
-layers = 4  
+num_of_layers = 4  
 
-node_network = c.get_nodes_per_layer(
+cost = Cost(Node(), Node())
+
+node_network = cost.get_nodes_per_layer(
     0, 0,
-    0, 200,
-    layers
+    1.7986, 0,
+    num_of_layers
 )
 
 print(node_network)
