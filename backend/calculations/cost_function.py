@@ -100,7 +100,7 @@ class Cost:
             for j in range(-2, num_of_nodes-1):
                     
                 node_cart = layer_center + perp_vector * dist_btw_nodes * j #scaling up and down from cetner
-                
+
                 # convert back to lat and long (call cartesian_to_lat_long function)
                 lat, long = self.cartesian_to_lat_long(node_cart[0], node_cart[1], node_cart[2])
                     
@@ -111,7 +111,12 @@ class Cost:
             node_network.append(layer_nodes)
 
 
-        return node_network
+        return {
+                "source": (lat1, lon1),
+                "layers": np.array(node_network),
+                "destination": (lat2, lon2)
+                }
+
 
     # helper functions 
     def lat_long_to_radians(self, lat, lon):
@@ -266,7 +271,7 @@ cost = Cost(Node(), Node())
 
 node_network = cost.get_nodes_per_layer(
     0, 0,
-    1.7986, 0,
+    1.7896, 0,
     num_of_layers
 )
 
