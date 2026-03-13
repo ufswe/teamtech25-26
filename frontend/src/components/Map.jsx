@@ -6,16 +6,37 @@ import 'leaflet/dist/leaflet.css';
 import airportData from "../global-airports.json";
 //airport data from https://github.com/jbrooksuk/JSON-Airports 
 
-
-//coordinates set to uf when map first loaded 
-const center = {
-    lat: 29.65,
-    lng: -82.35,
-}
-
 //API keys
 const MAPTILER_KEY = 'dT0LApeCkzfKLrNt5WIZ';
 const OWM_API_KEY = 'c7f94e4f2f8ad884069afd57801bfa01';
+
+
+// helper function to get coord by IATA code from airport data 
+const getAirportCoords = (iata) => {
+    const airport = airportData.features.find(
+        f => f.properties.iata_code === iata
+    );
+    if (airport) {
+        const [lng, lat] = airport.geometry.coordinates; 
+        return [lat, lng];
+    }
+    return null;
+};
+
+// update marker position when airports are selected 
+const departureIATA = "GNV"; // hardcoded for testing, fix later to be what the user selected 
+const arrivalIATA = "MCO";
+
+//initial positions for the markers
+const dICenter = getAirportCoords(departureIATA);
+const oICenter = getAirportCoords(arrivalIATA);
+
+// zoom to fit map to when airports are selected
+const airportBounds = [
+    getAirportCoords(departureIATA),
+    getAirportCoords(arrivalIATA)
+].filter(Boolean);
+
 
 //importing custom marker icons
 const originIcon = new L.Icon({
@@ -32,18 +53,8 @@ const destinationIcon = new L.Icon({
     iconAnchor: [12.5, 35],  
 });
 
-const airportIcon = new L.Icon({
-    iconUrl: '/airport.png', 
-    iconRetinaUrl: '/airport.png',
-    iconSize: [30, 30],     
-    iconAnchor: [15, 15],  
-});
 
-//initial positions for the markers
-const dICenter = [29.65, -82.35];
-const oICenter = [29.64, -82.34];
-
-//marker 
+//marker still has draggable functionality just in case but i disabled it 
 function DraggableMarker({ position: initialPosition, icon }) {
   const [position, setPosition] = useState(initialPosition);
     const markerRef = useRef(null);
@@ -62,7 +73,7 @@ function DraggableMarker({ position: initialPosition, icon }) {
 
     return (
         <Marker
-            draggable={true} 
+            draggable={false} 
             eventHandlers={eventHandlers}
             position={position}
             icon={icon}
@@ -75,7 +86,23 @@ function DraggableMarker({ position: initialPosition, icon }) {
 // map setup 
 export default function Map() {
 
-    const [airports, setAirports] = useState(null);
+
+    const [fullscreen, setFullscreen] = useState(false);
+    const containerRef = useRef(null);
+    const [style, setStyle] = useState({});  
+    const mapRef = useRef(null);
+
+
+    // filtering airports 
+    const [selectedAirports, setSelectedAirports] = useState([departureIATA, arrivalIATA]); 
+    const filteredAirports = useMemo(() => {
+        return {
+            ...airportData,
+            features: airportData.features.filter(feature =>
+                selectedAirports.includes(feature.properties.iata_code)
+            )
+        };
+    }, [selectedAirports]);
 
 
     // add popups to each airport point
@@ -86,13 +113,76 @@ export default function Map() {
     };
 
     return (
-        <div className="map-container">
+        <div  
+            ref={containerRef}
+            style={style}
+            className={`map-container ${fullscreen ? "fullscreen" : ""}`}
+        >
+        
+
             <MapContainer
-                center={[center.lat, center.lng]}
-                zoom={13}
+                
+                bounds={airportBounds}
                 scrollWheelZoom={true}
                 className="map"
+                ref={mapRef}
+                
             >
+                // fullscreen button
+                <button
+                    className="fullscreen-btn"
+
+                    // animation transition so that map stays in place and smooth resizing 
+                    onClick={() => {
+                        const rect = containerRef.current.getBoundingClientRect();
+
+                        if (!fullscreen) {
+                            setStyle({
+                                top: rect.top,
+                                left: rect.left,
+                                width: rect.width,
+                                height: rect.height
+                            });
+
+                            requestAnimationFrame(() => {
+                                setFullscreen(true);
+
+                                setTimeout(() => {
+                                    setStyle({
+                                        top: "50%",
+                                        left: "50%",
+                                        transform: "translate(-50%, -50%)",
+                                        width: "90vw",
+                                        height: "90vh"
+                                    });
+                                }, 10);
+                            });
+
+                        } else {
+                            setFullscreen(false);
+                            setStyle({});
+                        }
+
+                        // makes sure that map stays in place
+                        const start = performance.now();
+                        const duration = 450;
+
+                        function animateResize(now) {
+                            if (mapRef.current) {
+                                mapRef.current.invalidateSize();
+                            }
+
+                            if (now - start < duration) {
+                                requestAnimationFrame(animateResize);
+                            }
+                        }
+
+                        requestAnimationFrame(animateResize);
+                    }}
+                    >
+                    ⛶
+                </button>
+
                 {/* // OpenStreetMap tiles with MapTiler styling */}
                 <TileLayer
                     attribution='&copy; OpenStreetMap contributors'
@@ -115,7 +205,7 @@ export default function Map() {
                     {/* // layer of airport data */}
                     <LayersControl.Overlay checked name="Airports">
                             <GeoJSON 
-                            data={airportData} 
+                            data={filteredAirports} 
                             pointToLayer={(feature, latlng) => L.circleMarker(latlng, {
                                 radius: 10,
                                 fillColor: "#78b4f9",
@@ -129,7 +219,7 @@ export default function Map() {
                                 if (feature.properties && feature.properties.name) {
                                 layer.bindPopup(`
                                     <strong>${feature.properties.name}</strong><br/>
-                                    IATA: ${feature.properties.iata || 'N/A'}
+                                    IATA: ${feature.properties.iata_code || 'N/A'}
                                 `);
                                 }
                             }}
@@ -137,6 +227,7 @@ export default function Map() {
                         </LayersControl.Overlay>
 
                 </LayersControl>
+
                 
             </MapContainer>
         </div>

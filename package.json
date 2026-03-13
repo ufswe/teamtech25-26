@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "leaflet.fullscreen": "^1.6.0"
+  }
+}
