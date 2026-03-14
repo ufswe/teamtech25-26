@@ -2,12 +2,14 @@ from turtle import distance
 from ..data_structures.node import Node
 import math
 import numpy as np
+from collections import defaultdict
+import requests
 """
 To run, call this from teamtech25-26 root folder
 use: python -m backend.calculations.cost_function
 
 """
-class cost:
+class Cost:
 
     def __init__(self, src: Node, dest: Node):
         self.src = src #in lat and long
@@ -60,11 +62,11 @@ class cost:
 
         unit_vector = src_dest_vector / np.linalg.norm(src_dest_vector)
 
-        # calculating the perpecducular vector 
+        # calculating the perpendicular vector 
 
-        up = np.array([0, 0, 1]) # just using this for cross porduct, just points up 
+        up = np.array([0, 0, 1]) # just using this for cross product, just points up 
         perp_vector = np.cross(unit_vector, up)
-        perp_vector = perp_vector / np.linalg.norm(perp_vector) # normalinze vector to become 1
+        perp_vector = perp_vector / np.linalg.norm(perp_vector) # normalize vector to become 1
 
     
         # num_of_nodes=4
@@ -85,7 +87,7 @@ class cost:
 
         for i in range (1, num_of_layers):
             flight_progress = unit_vector * dist_btw_layer * i
-            layer_center = src + (flight_progress) # basically moving the central point by the distance along the untit_distance vector
+            layer_center = src + (flight_progress) # basically moving the central point by the distance along the unit_distance vector
             
             # # calculate vector perpendicular to src_dest_vector and scale by dist_btw_nodes
             # layer_vector = np.array([-(flight_progress[1]), (flight_progress[0])])
@@ -97,8 +99,8 @@ class cost:
             layer_nodes = []
             for j in range(-2, num_of_nodes-1):
                     
-                node_cart = layer_center + perp_vector * dist_btw_nodes * j #scaling up and down from cetner
-                
+                node_cart = layer_center + perp_vector * dist_btw_nodes * j #scaling up and down from center
+
                 # convert back to lat and long (call cartesian_to_lat_long function)
                 lat, long = self.cartesian_to_lat_long(node_cart[0], node_cart[1], node_cart[2])
                     
@@ -109,7 +111,12 @@ class cost:
             node_network.append(layer_nodes)
 
 
-        return node_network
+        return {
+                "source": (lat1, lon1),
+                "layers": np.array(node_network),
+                "destination": (lat2, lon2)
+                }
+
 
     # helper functions 
     def lat_long_to_radians(self, lat, lon):
@@ -172,9 +179,39 @@ class cost:
         pass 
     
     # Might use flight history for heatmap 
-    # traffic 
-    def get_air_traffic_desity(self):
-        pass 
+    # traffic
+    def fetch_aircraft_near_point(self, lat: float, lon:float, radius_nm: int=100, timeout_s: int=10) -> list:
+        if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+            raise ValueError("Invalid latitude or longitude")
+        if not (0 < radius_nm <= 250):
+            raise ValueError("Radius must be between 1 and 250 nautical miles")
+        
+        url= f"https://api.adsb.lol/v2/point/{lat}/{lon}/{radius_nm}"
+        r= requests.get(url, timeout=timeout_s)
+        r.raise_for_status()
+        data = r.json()
+        return data.get("ac", [])
+    
+    def get_air_traffic_density(self, radius_nm: int=100, cell_degree: float=0.25) -> dict:
+        src_lat=self.src.getLatitude()
+        src_lon=self.src.getLongitude()
+        aircraft_list = self.fetch_aircraft_near_point(src_lat, src_lon, radius_nm)
+        bins=defaultdict(int)
+        for ac in aircraft_list:
+            lat=ac.get("lat")
+            lon=ac.get("lon")
+            hex_id=ac.get("hex")
+            if lat is None or lon is None or hex_id is None:
+                continue
+            cell_lat=math.floor(lat/cell_degree)*cell_degree
+            cell_lon=math.floor(lon/cell_degree)*cell_degree
+            bins[(round(cell_lat, 5), round(cell_lon, 5))]+=1
+
+        return dict(bins)
+    def get_collision_density_score(self, radius_nm: int=100, cell_degree: float=0.25) -> int:
+        bins=self.get_air_traffic_density(radius_nm, cell_degree)
+        return sum(bins.values()) 
+    
 
 
     def check_warning_status(self, wind, precipitation, lightning, time) -> bool:  
@@ -213,7 +250,7 @@ class cost:
         #Placeholder for now 
         distance = 0 # lower the better
         time = 0 # lower the better 
-        collision_density = 0 # calcuated using heatmap (collision risk, so the lower, the better) 
+        collision_density = self.get_collision_density_score()
         carbon_emissions = 0
 
         w1 = 0.25
@@ -228,15 +265,17 @@ class cost:
 
 
 # For testing------Ignore
-c = cost(None, None)
+num_of_layers = 4  
 
-layers = 2  
+cost = Cost(Node(), Node())
 
-node_network = c.get_nodes_per_layer(
-    29.687330584,-82.269665588,
-    33.942791, -118.410042,
-    layers
+node_network = cost.get_nodes_per_layer(
+    0, 0,
+    1.273, 1.273,
+    num_of_layers
 )
 
 print(node_network)
+
+
 
