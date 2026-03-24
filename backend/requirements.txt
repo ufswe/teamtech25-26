@@ -4,3 +4,6 @@ scikit-learn
 matplotlib
 flask
 flask-cors
+openmeteo_requests
+requests_cache
+retry_requests
