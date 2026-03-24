@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import "../components/Map.css";
 import "../styles/flight.css";
 import Map from "../components/Map";
@@ -12,6 +12,7 @@ export default function Flight() {
 
   const [deptAirport, setDeptAirport] = useState();
   const [arrivalAirport, setArrivalAirport] = useState();
+  const [lat, setLat] = useState(null);
 
   const [deptTime, setDeptTime] = useState();
 
@@ -30,6 +31,16 @@ export default function Flight() {
     { value: "airport 2", label: "AP2 - airport 2" },
     { value: "airport 3", label: "AP3 - airport 3" }
   ];
+  
+   useEffect(() => {
+    fetch('http://127.0.0.1:5000/testing2')
+    .then(res => res.json())
+    .then(data => {
+      console.log(lat)
+      setLat(data.lat);
+    })
+    .catch(err => console.log("Error:", err))
+  }, []);
 
   return (
     <div className="flight-page">
@@ -69,7 +80,12 @@ export default function Flight() {
               placeholder="Enter"
             />
           </div>
+    
         </div>
+
+        <div>
+            Lat: {lat}
+          </div>
 
         <div className="priority-selection">
 

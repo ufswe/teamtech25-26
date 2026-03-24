@@ -51,5 +51,9 @@ print("\nHourly data\n", hourly_dataframe)
 def testing():
     return jsonify({"message": f"Weather data retrieved for coordinates: {response.Latitude()}, {response.Longitude()} {hourly_dataframe}"}), 200
 
+@app.route('/testing2', methods=['GET'])
+def testing2():
+    return jsonify({"message": response.Latitude()})
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001, debug=True)
