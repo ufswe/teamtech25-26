@@ -15,6 +15,11 @@ export default function Flight() {
 
   const [deptTime, setDeptTime] = useState();
 
+  // Added different Knob Value components
+  const [carbonValue, setCarbonValue] = useState(0);
+  const [weatherValue, setWeatherValue] = useState(0);
+  const [travelValue, setTravelValue] = useState(0);
+
   const [deptTimezone] = useState(() =>
     new Date()
       .toLocaleTimeString('en-US', { timeZoneName: 'short' })
@@ -72,7 +77,24 @@ export default function Flight() {
         </div>
 
         <div className="priority-selection">
-
+          <h3 className="priority-heading">Priority Selections</h3>
+          <div className="priority-knobs">
+            <Knob label="Carbon Emissions" value={carbonValue} onChange={setCarbonValue} />
+            <Knob label="Weather Safety" value={weatherValue} onChange={setWeatherValue} />
+            <Knob label="Travel Time" value={travelValue} onChange={setTravelValue} />
+          </div>
+          <div className="priority-buttons">
+            <Button
+              onClick={() => {
+                setCarbonValue(0);
+                setWeatherValue(0);
+                setTravelValue(0);
+              }}
+            >
+              Clear
+            </Button>
+            <Button>Enter</Button>
+          </div>
         </div>
 
       </div>
