@@ -9,7 +9,7 @@ To run, call this from teamtech25-26 root folder
 use: python -m backend.calculations.cost_function
 
 """
-class cost:
+class Cost:
 
     def __init__(self, src: Node, dest: Node):
         self.src = src #in lat and long
@@ -62,11 +62,11 @@ class cost:
 
         unit_vector = src_dest_vector / np.linalg.norm(src_dest_vector)
 
-        # calculating the perpecducular vector 
+        # calculating the perpendicular vector 
 
-        up = np.array([0, 0, 1]) # just using this for cross porduct, just points up 
+        up = np.array([0, 0, 1]) # just using this for cross product, just points up 
         perp_vector = np.cross(unit_vector, up)
-        perp_vector = perp_vector / np.linalg.norm(perp_vector) # normalinze vector to become 1
+        perp_vector = perp_vector / np.linalg.norm(perp_vector) # normalize vector to become 1
 
     
         # num_of_nodes=4
@@ -87,7 +87,7 @@ class cost:
 
         for i in range (1, num_of_layers):
             flight_progress = unit_vector * dist_btw_layer * i
-            layer_center = src + (flight_progress) # basically moving the central point by the distance along the untit_distance vector
+            layer_center = src + (flight_progress) # basically moving the central point by the distance along the unit_distance vector
             
             # # calculate vector perpendicular to src_dest_vector and scale by dist_btw_nodes
             # layer_vector = np.array([-(flight_progress[1]), (flight_progress[0])])
@@ -99,8 +99,8 @@ class cost:
             layer_nodes = []
             for j in range(-2, num_of_nodes-1):
                     
-                node_cart = layer_center + perp_vector * dist_btw_nodes * j #scaling up and down from cetner
-                
+                node_cart = layer_center + perp_vector * dist_btw_nodes * j #scaling up and down from center
+
                 # convert back to lat and long (call cartesian_to_lat_long function)
                 lat, long = self.cartesian_to_lat_long(node_cart[0], node_cart[1], node_cart[2])
                     
@@ -111,7 +111,12 @@ class cost:
             node_network.append(layer_nodes)
 
 
-        return node_network
+        return {
+                "source": (lat1, lon1),
+                "layers": np.array(node_network),
+                "destination": (lat2, lon2)
+                }
+
 
     # helper functions 
     def lat_long_to_radians(self, lat, lon):
@@ -260,12 +265,14 @@ class cost:
 
 
 # For testing------Ignore
-layers = 2  
+num_of_layers = 4  
 
-node_network = c.get_nodes_per_layer(
-    29.687330584,-82.269665588,
-    33.942791, -118.410042,
-    layers
+cost = Cost(Node(), Node())
+
+node_network = cost.get_nodes_per_layer(
+    0, 0,
+    1.273, 1.273,
+    num_of_layers
 )
 
 print(node_network)
