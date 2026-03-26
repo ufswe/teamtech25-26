@@ -36,10 +36,10 @@ class Cost:
         # self.visibility = #(miles)
         # self.altitude = #(feet)
 
-    def get_num_of_layers(self):
+    def get_num_of_layers(self, lat1, long1, lat2, long2):
 
-        self.total_distance = self.get_distance(self.src.getLatitude(), self.src.getLongitude(), 
-                                                self.dest.getLatitude(), self.dest.getLongitude())
+        self.total_distance = self.get_distance(lat1, long1, 
+                                                lat2, long2)
         
         num_of_layers = (self.total_distance / self.dist_btw_layers)
 
@@ -57,8 +57,12 @@ class Cost:
         #create vector from source to destination
         src = np.array([x1, y1, z1])
         dest = np.array([x2, y2, z2])
+        print(f"src: {src}")
+        print(f"dest: {dest}")
+        
 
         src_dest_vector = dest - src
+        print(f"src_dest_vecotr: {src_dest_vector}")
 
         unit_vector = src_dest_vector / np.linalg.norm(src_dest_vector)
 
@@ -87,7 +91,10 @@ class Cost:
 
         for i in range (1, num_of_layers):
             flight_progress = unit_vector * dist_btw_layer * i
+            print(f"Progress: {flight_progress} i: {i} unit_vector: {unit_vector}")
             layer_center = src + (flight_progress) # basically moving the central point by the distance along the unit_distance vector
+
+
             
             # # calculate vector perpendicular to src_dest_vector and scale by dist_btw_nodes
             # layer_vector = np.array([-(flight_progress[1]), (flight_progress[0])])
@@ -101,14 +108,21 @@ class Cost:
                     
                 node_cart = layer_center + perp_vector * dist_btw_nodes * j #scaling up and down from center
 
+                #print(node_cart)
+
                 # convert back to lat and long (call cartesian_to_lat_long function)
                 lat, long = self.cartesian_to_lat_long(node_cart[0], node_cart[1], node_cart[2])
+
+                #print(lat, long)
                     
                 # add the four calculated node values for each layer to an array
                 layer_nodes.append((lat, long))
+                
                     
                 # add the new array to a node network
             node_network.append(layer_nodes)
+
+            
 
 
         return {
@@ -265,13 +279,14 @@ class Cost:
 
 
 # For testing------Ignore
-num_of_layers = 4  
 
 cost = Cost(Node(), Node())
 
+num_of_layers = (int) (cost.get_num_of_layers(27.3, -82.55, 33.75,-85.386))
+
 node_network = cost.get_nodes_per_layer(
-    0, 0,
-    1.273, 1.273,
+    27.3, -82.55,
+    33.75, -85.386,
     num_of_layers
 )
 
