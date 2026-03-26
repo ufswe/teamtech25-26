@@ -7,7 +7,6 @@ from ..calculations import cost_function
 class Graph:
     def __init__(self):
         self._adjacency_list = {} #store nodes to all neighbors
-        self._layers = {} #{[source_air],[node_a, node_b],[node_c, node_d],[destination]}
         self._dp_table = {} #{node: (minimum_cost_to_reach_node, parent_node),...}
 
 
@@ -46,7 +45,8 @@ class Graph:
            return (self._dp_table[end][0], path) #return the minimum cost to reach the end node
 
 
-
+    def location(self, nodes):
+        return [(node.getLatitude(), node.getLongitude()) for node in nodes]
 
     def build_adjacency_list(self, _layers):
         for i in range(len(_layers) - 1):
