@@ -222,10 +222,14 @@ class Cost:
             bins[(round(cell_lat, 5), round(cell_lon, 5))]+=1
 
         return dict(bins)
-    def get_collision_density_score(self, radius_nm: int=100, cell_degree: float=0.25) -> int:
+    def get_collision_density_score(self, radius_nm: int=100, cell_degree: float=0.25) -> float:
         bins=self.get_air_traffic_density(radius_nm, cell_degree)
-        return sum(bins.values()) 
-    
+        area= math.pi*(radius_nm**2)
+        density = sum(bins.values()) / area if area > 0 else 0
+        min_density = 0.00
+        max_density = 0.002
+        collision_density_score=np.interp(np.clip(density, 0, max_density), [0, max_density], [0.0, 1.0])
+        return float(collision_density_score)
 
 
     def check_warning_status(self, wind, precipitation, lightning, time) -> bool:  
