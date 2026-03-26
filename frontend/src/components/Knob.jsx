@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import "./Knob.css";
 
-export default function Knob({ label, min = 0, max = 10, value = 0, onChange }) {
+export default function Knob({ label, min = 0, max = 100, value = 0, onChange }) {
   const knobRef = useRef(null);
   const inputRef = useRef(null);
   const isDragging = useRef(false);
@@ -21,7 +21,7 @@ export default function Knob({ label, min = 0, max = 10, value = 0, onChange }) 
   const rotation = fraction * ARC_RANGE - ARC_START;
 
   // center and radius for the outer dot indicators
-  const radius = 56;
+  const radius = 65;
   const cx = 70;
   const cy = 70;
 
