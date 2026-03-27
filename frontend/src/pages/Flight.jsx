@@ -7,6 +7,8 @@ import Button from "../components/Button.jsx";
 import Card from "../components/Card.jsx";
 import Input from "../components/Input.jsx";
 import Knob from "../components/Knob.jsx";
+import ToggleSwitch from "../components/ToggleSwitch.jsx"; // toggle for map overlay views
+import FeasibilityBar from "../components/FeasibilityBar.jsx"; // horizontal bar showing flight feasibility
 
 export default function Flight() {
 
@@ -19,6 +21,10 @@ export default function Flight() {
   const [carbonValue, setCarbonValue] = useState(0);
   const [weatherValue, setWeatherValue] = useState(0);
   const [travelValue, setTravelValue] = useState(0);
+
+  // Toggle states for map overlay layers (default both on)
+  const [weatherView, setWeatherView] = useState(true);
+  const [airTrafficView, setAirTrafficView] = useState(true);
 
   const [deptTimezone] = useState(() =>
     new Date()
@@ -54,9 +60,9 @@ export default function Flight() {
                 type="time"
                 value={deptTime}
                 onChange={setDeptTime}
-              />  
-              <p className="timezone-label">{deptTimezone}</p>  
-            </div>         
+              />
+              <p className="timezone-label">{deptTimezone}</p>
+            </div>
           </div>
           <div className="destination">
             <Dropdown
@@ -101,8 +107,32 @@ export default function Flight() {
 
       <div className="output-panel">
         <Map />
+        {/* Info panel: map overlay toggles, flight stats, and feasibility */}
+        <div className="info-panel">
+          <div className="info-panel-top">
+            {/* Left side: toggle switches for map overlays */}
+            <div className="info-toggles">
+              <ToggleSwitch label="Weather View" isOn={weatherView} onToggle={setWeatherView} />
+              <ToggleSwitch label="Air Traffic View" isOn={airTrafficView} onToggle={setAirTrafficView} />
+            </div>
+            {/* Right side: computed flight statistics (placeholder values for now) */}
+            <div className="info-stats">
+              <div className="info-stat-row">
+                <span className="info-stat-label">Duration:</span>
+                <span className="info-stat-value">Hrs</span>
+                <span className="info-stat-value">Mins</span>
+              </div>
+              <div className="info-stat-row">
+                <span className="info-stat-label">Carbon Emission:</span>
+                <span className="info-stat-value">%</span>
+              </div>
+            </div>
+          </div>
+          {/* Feasibility progress bar (0-100); currently hardcoded to 15%) */}
+          <FeasibilityBar value={15} />
+        </div>
       </div>
     </div>
-  
+
   );
 }
