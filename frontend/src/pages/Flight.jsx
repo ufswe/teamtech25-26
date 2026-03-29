@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { DayPicker } from 'react-day-picker';
+import { format } from 'date-fns';
+import "react-day-picker/dist/style.css";
 import "../components/Map.css";
 import "../styles/flight.css";
 import Map from "../components/Map";
@@ -16,6 +19,7 @@ export default function Flight() {
   const [arrivalAirport, setArrivalAirport] = useState();
 
   const [deptTime, setDeptTime] = useState();
+  const [arrivalTime, setArrivalTime] = useState();
 
   // Added different Knob Value components
   const [carbonValue, setCarbonValue] = useState(0);
@@ -26,21 +30,18 @@ export default function Flight() {
   const [weatherView, setWeatherView] = useState(true);
   const [airTrafficView, setAirTrafficView] = useState(true);
 
-  const [deptTimezone] = useState(() =>
-    new Date()
-      .toLocaleTimeString('en-US', { timeZoneName: 'short' })
-      .split(' ')
-      .pop()
-  );
-
   // TODO: NEEDS TO BE FIXED TO BE DYNAMIC
-  const arrivalTimezone = "EST";
+  const [deptTimezone, setDeptTimezone] = useState("EST");
+  const [arrivalTimezone, setArrivalTimezone] = useState("EST");
 
   const airports = [
     { value: "airport 1", label: "AP1 - airport 1" },
     { value: "airport 2", label: "AP2 - airport 2" },
     { value: "airport 3", label: "AP3 - airport 3" }
   ];
+
+  const [deptDate, setDeptDate] = useState(new Date());
+  const [arrivalDate, setArrivalDate] = useState(new Date());
 
   return (
     <div className="flight-page">
@@ -54,9 +55,19 @@ export default function Flight() {
               options={airports}
               placeholder="Select Departure Airport"
             />
+            < DayPicker 
+              mode="single"
+              selected={deptDate}
+              onSelect={setDeptDate}
+              showOutsideDays
+              modifiersClassNames={{
+                selected: 'dept-date',
+                today: 'today-date',
+                outside: 'outside-date'
+              }}
+            />
             <div className="time-input-wrapper">
               <Input
-                label="Time"
                 type="time"
                 value={deptTime}
                 onChange={setDeptTime}
@@ -72,13 +83,26 @@ export default function Flight() {
               options={airports}
               placeholder="Select Arrival Airport"
             />
-            <div className="time-input-wrapper">
-              <p>Display time after calculation?</p>
-            </div>
-            <Button
-              label="Enter"
-              placeholder="Enter"
+            < DayPicker 
+              mode="single"
+              selected={arrivalDate}
+              disabled
+              showOutsideDays
+              className="readonly-calendar"
+              modifiersClassNames={{
+                selected: 'dept-date',
+                today: 'today-date',
+                outside: 'outside-date'
+              }}
             />
+            <div className="time-input-wrapper">
+              <Input
+                type="time"
+                value={arrivalTime}
+                readOnly
+              />
+              <p className="timezone-label">{deptTimezone}</p>
+            </div>
           </div>
         </div>
 
@@ -102,7 +126,6 @@ export default function Flight() {
             <Button>Enter</Button>
           </div>
         </div>
-
       </div>
 
       <div className="output-panel">
