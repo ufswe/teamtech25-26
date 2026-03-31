@@ -16,6 +16,7 @@ def get_optimal_path():
     # - create node network
     # - create graph
     # - find optimal path
+	
     pass
 
 @app.route('/api/optimal-path2', methods=['POST'])
