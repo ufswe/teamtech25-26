@@ -14,21 +14,20 @@
   background-color: white;
   border: 1px solid #1a2e5a;
   border-radius: 20px;
-  padding: 4px 16px;
-  font-size: 0.8rem;
+  padding: 6px 20px;   /* increased from 4px 16px for better touch area */
+  font-size: 1rem;     /* increased from 0.8rem for readability */
   font-weight: 700;
   color: #1a2e5a;
   text-align: center;
-  margin-top: 12px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   white-space: nowrap;
 }
 
 /* the area the user can click/drag to rotate */
 .knob-container {
   position: relative;
-  width: 185px;
-  height: 185px;
+  width: 190px;   /* scaled up from 140px to match Figma */
+  height: 190px;  /* scaled up from 140px to match Figma */
   cursor: grab;
   display: flex;
   align-items: center;
@@ -51,8 +50,8 @@
   transform: translate(-50%, -50%);
   background-color: white;
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
+  width: 46px;   /* enlarged from 36px to match bigger knob */
+  height: 46px;  /* enlarged from 36px to match bigger knob */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -64,7 +63,7 @@
 /* the number displayed in the center */
 .knob-value {
   color: #1a2e5a;
-  font-size: 1rem;
+  font-size: 1.25rem; /* bumped from 1rem to stay proportional with larger knob */
   font-weight: 700;
   font-family: "Instrument Sans", sans-serif;
   user-select: none;
@@ -98,26 +97,25 @@
 
 .priority-heading {
   font-family: "Instrument Sans", sans-serif;
-  font-size: 1rem;
+  font-size: 1.2rem; /* slightly larger heading to match scaled-up knobs */
   font-weight: 700;
   color: #1a2e5a;
   text-align: center;
-  margin: 0.5rem 0;
+  margin: 0.5rem 0 1.5rem 0; /* added bottom spacing between heading and knobs */
 }
 
 /* row of knobs */
 .priority-knobs {
   display: flex;
   justify-content: center;
-  gap: 16px;
+  gap: 24px; /* wider spacing between knobs (was 16px) */
 }
 
 /* push the whole section toward the bottom of the control panel */
 .priority-selection {
   margin-top: auto;
-  padding-top: 4rem;
+  padding-top: 0; /* removed 4rem top padding; margin-top:auto handles spacing now */
   padding-bottom: 2rem;
-  align-items: center;
 }
 
 /* clear + enter buttons */
