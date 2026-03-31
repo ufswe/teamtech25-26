@@ -1,36 +1,52 @@
 import queue
 import heapq
 
+from ..calculations import cost_function
+
 
 class Graph:
     def __init__(self):
         self._adjacency_list = {} #store nodes to all neighbors
-        self._layers = {} #{[source_air],[node_a, node_b],[node_c, node_d],[destination]}
         self._dp_table = {} #{node: (minimum_cost_to_reach_node, parent_node),...}
 
 
     def add_vertex(self, node, cost):
         pass
 
+
+
     def min_cost_path(self, start, end):
-       self._dp_table[start] = (0, None)  #node -> (cost to reach node, parent node)
+       path = []
+       if end.airport == True: ##will need to change this when editing
+           self._dp_table[start] = (0, None)  #node -> (cost to reach node, parent node)
+           for i in range(0, len(self._layers) - 1 ):
+               for node in self._layers[i]:
+                       if node.isOpen == False:
+                           continue
+                       #will only do this next code if its open/no plane is there   
+                       self._dp_table[node] = (float('inf'), None)  #Initialize cost to reach node as infinity
+                       for neighbor in self._adjacency_list.get(node, []):
+                           if neighbor in self._dp_table:
+                               #getCost function from calculations
+                               cost1 = cost_function.cost(node,neighbor)
+                               cost_to_neighbor = cost1.get_total_cost() + self._dp_table[node][0] #cost to reach node + cost to reach neighbor from node
+                           if cost_to_neighbor < self._dp_table[neighbor][0]:
+                               self._dp_table[neighbor] = (cost_to_neighbor, node)
+                           else: #maybe?
+                               self._dp_table[neighbor] = (cost1.get_total_cost() + self._dp_table[node][0], node) #added this line check if its right
+                           #if its not in the self self.dp_table the cost hasn't been calculated so add it to the dp table as a new neighbor
+          
+           source = self.dp_table[end][1]
+           while source is not None:
+               path.append(source)
+               source = self._dp_table[source][1]
+           path.reverse()
+           path.append(end)
+           return (self._dp_table[end][0], path) #return the minimum cost to reach the end node
 
 
-       for i in range(0, len(self._layers) - 1 ):
-           for node in self._layers[i]:
-               self._dp_table[node] = (float('inf'), None)  #Initialize cost to reach node as infinity
-               for neighbor in self._adjacency_list.get(node, []):
-                   if neighbor in self._dp_table:
-                       #getCost function from calculations
-                       cost_to_neighbor = getCost(node, neighbor) + self._dp_table[node][0] #cost to reach node + cost to reach neighbor from node
-                       if cost_to_neighbor < self._dp_table[neighbor][0]:
-                           self._dp_table[neighbor] = (cost_to_neighbor, node)
-                       else: #maybe?
-                            self._dp_table[neighbor] = (getCost(node, neighbor) + self._dp_table[node][0], node) #added this line check if its right
-                    #if its not in the self self.dp_table the cost hasn't been calculated so add it to the dp table as a new neighbor
-       return self._dp_table[end][0]  #return the minimum cost to reach the end node
-        #edit this to return the path as well --tuples
-           
+    def location(self, nodes):
+        return [(node.getLatitude(), node.getLongitude()) for node in nodes]
 
     def build_adjacency_list(self, _layers):
         for i in range(len(_layers) - 1):
