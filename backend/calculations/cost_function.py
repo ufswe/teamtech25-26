@@ -47,7 +47,7 @@ class Cost:
 
     def get_nodes_per_layer(self, lat1, lon1, lat2, lon2, num_of_layers):
 
-        # convert latitude longitude to cartesian
+        # convert latitude and longitude to cartesian coordinates
 
         x1, y1, z1 = self.lat_long_to_cartesian(lat1, lon1)
         x2, y2, z2 = self.lat_long_to_cartesian(lat2, lon2)
@@ -55,6 +55,7 @@ class Cost:
        # lat1, lon1, lat2, lon2 = self.lat_long_to_cartesian(lat1, lon1),  self.lat_long_to_cartesian(lat2, lon2)
 
         #create vector from source to destination
+
         src = np.array([x1, y1, z1])
         dest = np.array([x2, y2, z2])
         print(f"src: {src}")
@@ -68,31 +69,25 @@ class Cost:
 
         # calculating the perpendicular vector 
 
-        up = np.array([0, 0, 1]) # just using this for cross product, just points up 
+        up = np.array([0, 0, 1]) # using this for cross product, just points up 
         perp_vector = np.cross(unit_vector, up)
         perp_vector = perp_vector / np.linalg.norm(perp_vector) # normalize vector to become 1
 
-    
-        # num_of_nodes=4
         num_of_nodes = 4
 
-        # dist_btw_nodes=5
         dist_btw_nodes = 5
 
-        # dist_btw_layer=50
         dist_btw_layer = 50
-
-        # node_array = np.array([])
 
         node_network = []
 
         # create a loop that will iterate from 0 to the number of layers-1
-        # shoudl iterate from 1, because layer 0 is the src point
+        # should iterate from 1, because layer 0 is the src point
 
         for i in range (1, num_of_layers):
             flight_progress = unit_vector * dist_btw_layer * i
             print(f"Progress: {flight_progress} i: {i} unit_vector: {unit_vector}")
-            layer_center = src + (flight_progress) # basically moving the central point by the distance along the unit_distance vector
+            layer_center = src + (flight_progress) # basically moves the central point by the distance along the unit_distance vector
 
 
             
@@ -222,6 +217,7 @@ class Cost:
             bins[(round(cell_lat, 5), round(cell_lon, 5))]+=1
 
         return dict(bins)
+        
     def get_collision_density_score(self, radius_nm: int=100, cell_degree: float=0.25) -> float:
         bins=self.get_air_traffic_density(radius_nm, cell_degree)
         area= math.pi*(radius_nm**2)
