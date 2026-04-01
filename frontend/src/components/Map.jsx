@@ -167,6 +167,7 @@ function RainViewerAnimatedPrecip({ startDate, endDate, frame, onFramesChange, o
     );
 }
 
+
 // map setup 
 export default function Map() {
 
