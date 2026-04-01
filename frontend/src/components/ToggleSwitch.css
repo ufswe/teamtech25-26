@@ -1,0 +1,52 @@
+/* Wrapper: lays out the toggle button and its label side by side */
+.toggle-switch-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* The pill-shaped toggle track */
+.toggle-switch {
+  width: 50px;
+  height: 26px;
+  border-radius: 13px;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: background-color 0.2s ease;
+  padding: 0;
+}
+
+.toggle-on {
+  background-color: #1b3a6b;
+}
+
+.toggle-off {
+  background-color: #b0b0b0;
+}
+
+/* Circular thumb that slides left/right */
+.toggle-thumb {
+  display: block;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #fff;
+  position: absolute;
+  top: 3px;
+  transition: left 0.2s ease;
+}
+
+.toggle-on .toggle-thumb {
+  left: 27px;
+}
+
+.toggle-off .toggle-thumb {
+  left: 3px;
+}
+
+.toggle-label {
+  font-family: "Instrument Sans", sans-serif;
+  font-size: 0.9rem;
+  color: #1b3a6b;
+}
