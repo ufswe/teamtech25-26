@@ -44,6 +44,8 @@ const destinationIcon = new L.Icon({
     iconAnchor: [12.5, 35],  
 });
 
+
+
 //marker still has draggable functionality just in case but i disabled it 
 function DraggableMarker({ position, icon }) {
     return <Marker position={position} icon={icon} draggable={false} />;
@@ -165,6 +167,7 @@ function RainViewerAnimatedPrecip({ startDate, endDate, frame, onFramesChange, o
     );
 }
 
+
 // map setup 
 export default function Map() {
 
@@ -180,6 +183,7 @@ export default function Map() {
     const [precipPlaying, setPrecipPlaying] = useState(true);
     const [isScrubbing, setIsScrubbing] = useState(false);
     const [wasPlayingBeforeScrub, setWasPlayingBeforeScrub] = useState(false);
+    const showPath = true; // toggle for showing node path
 
     // placeholder range until connected to user-selected dates
     const precipStartDate = "03/15/2023 00:00";
@@ -231,6 +235,21 @@ export default function Map() {
 
     const airportBounds = selectedCoords.length ? selectedCoords : [dICenter, oICenter].filter(Boolean);
 
+    // replace this array with the array of nodes between the airports, [lat,long]
+    const customWaypointPoints = [
+        [29.6901, -82.271797],
+        [29.297568, -82.412414],
+        [29.542331, -81.718552],
+        [28.937368, -82.137329],
+        [29.182131, -81.443466],
+        [28.577168, -81.862244],
+        [28.821931, -81.168381],
+        [28.429399, -81.308998]
+    ];
+
+    // computing path
+    const waypointPath = customWaypointPoints;
+
     useEffect(() => {
         if (mapRef.current && airportBounds.length) {
             mapRef.current.fitBounds(airportBounds, { padding: [30, 30] });
@@ -270,7 +289,13 @@ export default function Map() {
                     mapRef.current = mapInstance;
                 }}
             >
-                <Polyline positions={[dICenter, oICenter]} color="#a3d4ff" weight={3} />
+                {/*showPath is the toggle variable i.e when user hits enter
+                This is where the array of coordinates [lat,long] is given 
+                and polyline connects the dots 
+                */}
+                {showPath && waypointPath.length ? (
+                    <Polyline positions={waypointPath} color="#a3d4ff" weight={3} />
+                ) : null}
 
                 {/* fullscreen button */}
                 <button
