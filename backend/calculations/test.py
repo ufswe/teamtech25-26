@@ -40,3 +40,9 @@ class PathCost:
 		c = 2 * asin(sqrt(a))
 		km = 6371 * c
 		return km
+	
+	def check_network_restrictions(self, node_network):
+		for layer in node_network:
+			for (lat, lon) in layer:
+				if self.is_restricted(lat, lon):
+					print("Restricted zone violation detected")
