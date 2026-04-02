@@ -1,1 +1,4 @@
 __pycache__/
+.env
+ml_ready_dataset.csv
+balanced_ml_ready_dataset.csv
