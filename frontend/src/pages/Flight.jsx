@@ -13,6 +13,8 @@ import Knob from "../components/Knob.jsx";
 import ToggleSwitch from "../components/ToggleSwitch.jsx"; // toggle for map overlay views
 import FeasibilityBar from "../components/FeasibilityBar.jsx"; // horizontal bar showing flight feasibility
 
+console.log("Flight component rendering");
+
 export default function Flight() {
 
   const [deptAirport, setDeptAirport] = useState();
@@ -55,17 +57,6 @@ export default function Flight() {
               options={airports}
               placeholder="Select Departure Airport"
             />
-            < DayPicker 
-              mode="single"
-              selected={deptDate}
-              onSelect={setDeptDate}
-              showOutsideDays
-              modifiersClassNames={{
-                selected: 'dept-date',
-                today: 'today-date',
-                outside: 'outside-date'
-              }}
-            />
             <div className="time-input-wrapper">
               <Input
                 type="time"
@@ -82,18 +73,6 @@ export default function Flight() {
               onChange={setArrivalAirport}
               options={airports}
               placeholder="Select Arrival Airport"
-            />
-            < DayPicker 
-              mode="single"
-              selected={arrivalDate}
-              disabled
-              showOutsideDays
-              className="readonly-calendar"
-              modifiersClassNames={{
-                selected: 'dept-date',
-                today: 'today-date',
-                outside: 'outside-date'
-              }}
             />
             <div className="time-input-wrapper">
               <Input
