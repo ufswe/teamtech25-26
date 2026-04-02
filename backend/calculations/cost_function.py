@@ -19,15 +19,16 @@ class Cost:
         
         # Parameters for Boeing 737 model (uncomment)
         #C)2/kg fuel burned
-
-        # self.k = 3.16 
+        self.k = 3.16 
+        self.specific_fuel_consumption = 1.734*10^-7 #(kg of fuel/thrust/second)
+        self.aircraft_mass_takeoff = 79002 #kg
+        self.aircraft_mass_landing = 66349 #kg
+        self.aircraft_weight = self.aircraft_mass_takeoff * self.aircraft_mass_landing * self.g *.5 #N
+        self.LD = 18.1 #Lift to drag ratio
+        self.speed = 850 #km/h (cruising speed)
+        self.g = 9.81 #m/s^2
         # self.fuel_mass_flow = self.specific_fuel_consumption * self.aircraft_weight/self.LD #(kg/s)
-        # self.specific_fuel_consumption = 1.734*10^-7 #(kg of fuel/thrust/second)
-        # self.g= 9.81 #m/s^2
-        # self.aircraft_mass_takeoff=79002 #kg
-        # self.aircraft_mass_landing=66349 #kg
-        # self.aircraft_weight = self.aircraft_mass_takeoff * self.aircraft_mass_landing* self.g * .5 #N
-        # self.LD = 18.1 #Lift to drag ratio
+
         #weather risk bound variables
         # self.wind = #(knots)
         # self.precipitation = #(inches)
@@ -52,9 +53,9 @@ class Cost:
         x1, y1, z1 = self.lat_long_to_cartesian(lat1, lon1)
         x2, y2, z2 = self.lat_long_to_cartesian(lat2, lon2)
 
-       # lat1, lon1, lat2, lon2 = self.lat_long_to_cartesian(lat1, lon1),  self.lat_long_to_cartesian(lat2, lon2)
+        # lat1, lon1, lat2, lon2 = self.lat_long_to_cartesian(lat1, lon1),  self.lat_long_to_cartesian(lat2, lon2)
 
-        #create vector from source to destination
+        # create vector from source to destination
 
         src = np.array([x1, y1, z1])
         dest = np.array([x2, y2, z2])
@@ -185,7 +186,14 @@ class Cost:
     
     # first calculate fuel mass, then calculate C02
     def get_carbon_emissions(self):
-        pass 
+        fuel_mass_flow = self.specific_fuel_consumption * (self.aircraft_weight/ self.LD)
+
+        fuel_mass_entire_trip = fuel_mass_flow * (self.time_of_flight(self,distance) * 3600)
+
+        CO2 = self.k * fuel_mass_entire_trip
+
+        return CO2
+ 
     
     # Might use flight history for heatmap 
     # traffic
@@ -222,7 +230,7 @@ class Cost:
         bins=self.get_air_traffic_density(radius_nm, cell_degree)
         area= math.pi*(radius_nm**2)
         density = sum(bins.values()) / area if area > 0 else 0
-        min_density = 0.00
+        min_density = 0.00 #CHECK THIS
         max_density = 0.002
         collision_density_score=np.interp(np.clip(density, 0, max_density), [0, max_density], [0.0, 1.0])
         return float(collision_density_score)
