@@ -1,3 +1,4 @@
+from tkinter import NO
 from turtle import distance
 from ..data_structures.node import Node
 import math
@@ -116,10 +117,13 @@ class Cost:
                 #print(lat, long)
                     
                 # add the four calculated node values for each layer to an array
-                layer_nodes.append((lat, long))
+                newNode = Node(lat, long, False, True); 
+                
+                layer_nodes.append(newNode)
                 
                     
                 # add the new array to a node network
+
             node_network.append(layer_nodes)
 
             
