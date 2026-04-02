@@ -1,7 +1,10 @@
 from typing import Self
 
+from backend.calculations.cost_function import get_nodes_per_layers
+
 from backend.data_structures.node import Node
 
+import numpy as np
 
 class PathCost:
 	def __init__(self, src: Node, dest: Node):
@@ -46,3 +49,7 @@ class PathCost:
 			for (lat, lon) in layer:
 				if self.is_restricted(lat, lon):
 					print("Restricted zone violation detected")
+
+pc = PathCost(Node(0, 0), Node(0, 0))
+network = get_nodes_per_layers(pc, 40.0000, -75.0000, 38.8977, -77.0365, 5)
+pc.check_network_restrictions(network)
