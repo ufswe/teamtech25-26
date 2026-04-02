@@ -1,19 +1,20 @@
 import queue
 import heapq
 
-from ..calculations import cost_function
+from calculations import cost_function
 
 
 class Graph:
     def __init__(self):
         self._adjacency_list = {} #store nodes to all neighbors
         self._dp_table = {} #{node: (minimum_cost_to_reach_node, parent_node),...}
-
+        self._layers = [] #list of lists of nodes, each list is a layer of nodes
 
     def add_vertex(self, node, cost):
         pass
 
-
+    def initialize_layers(self, layers):
+        self._layers = layers
 
     def min_cost_path(self, start, end):
        path = []
