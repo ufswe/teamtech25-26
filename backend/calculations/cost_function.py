@@ -1,3 +1,4 @@
+from tkinter import NO
 from turtle import distance
 from ..data_structures.node import Node
 import math
@@ -9,7 +10,7 @@ To run, call this from teamtech25-26 root folder
 use: python -m backend.calculations.cost_function
 
 """
-class cost:
+class Cost:
 
     def __init__(self, src: Node, dest: Node):
         self.src = src #in lat and long
@@ -36,10 +37,10 @@ class cost:
         # self.visibility = #(miles)
         # self.altitude = #(feet)
 
-    def get_num_of_layers(self):
+    def get_num_of_layers(self, lat1, long1, lat2, long2):
 
-        self.total_distance = self.get_distance(self.src.getLatitude(), self.src.getLongitude(), 
-                                                self.dest.getLatitude(), self.dest.getLongitude())
+        self.total_distance = self.get_distance(lat1, long1, 
+                                                lat2, long2)
         
         num_of_layers = (self.total_distance / self.dist_btw_layers)
 
@@ -47,7 +48,7 @@ class cost:
 
     def get_nodes_per_layer(self, lat1, lon1, lat2, lon2, num_of_layers):
 
-        # convert latitude longitude to cartesian
+        # convert latitude and longitude to cartesian coordinates
 
         x1, y1, z1 = self.lat_long_to_cartesian(lat1, lon1)
         x2, y2, z2 = self.lat_long_to_cartesian(lat2, lon2)
@@ -55,39 +56,41 @@ class cost:
        # lat1, lon1, lat2, lon2 = self.lat_long_to_cartesian(lat1, lon1),  self.lat_long_to_cartesian(lat2, lon2)
 
         #create vector from source to destination
+
         src = np.array([x1, y1, z1])
         dest = np.array([x2, y2, z2])
+        print(f"src: {src}")
+        print(f"dest: {dest}")
+        
 
         src_dest_vector = dest - src
+        print(f"src_dest_vecotr: {src_dest_vector}")
 
         unit_vector = src_dest_vector / np.linalg.norm(src_dest_vector)
 
-        # calculating the perpecducular vector 
+        # calculating the perpendicular vector 
 
-        up = np.array([0, 0, 1]) # just using this for cross porduct, just points up 
+        up = np.array([0, 0, 1]) # using this for cross product, just points up 
         perp_vector = np.cross(unit_vector, up)
-        perp_vector = perp_vector / np.linalg.norm(perp_vector) # normalinze vector to become 1
+        perp_vector = perp_vector / np.linalg.norm(perp_vector) # normalize vector to become 1
 
-    
-        # num_of_nodes=4
         num_of_nodes = 4
 
-        # dist_btw_nodes=5
         dist_btw_nodes = 5
 
-        # dist_btw_layer=50
         dist_btw_layer = 50
-
-        # node_array = np.array([])
 
         node_network = []
 
         # create a loop that will iterate from 0 to the number of layers-1
-        # shoudl iterate from 1, because layer 0 is the src point
+        # should iterate from 1, because layer 0 is the src point
 
         for i in range (1, num_of_layers):
             flight_progress = unit_vector * dist_btw_layer * i
-            layer_center = src + (flight_progress) # basically moving the central point by the distance along the untit_distance vector
+            print(f"Progress: {flight_progress} i: {i} unit_vector: {unit_vector}")
+            layer_center = src + (flight_progress) # basically moves the central point by the distance along the unit_distance vector
+
+
             
             # # calculate vector perpendicular to src_dest_vector and scale by dist_btw_nodes
             # layer_vector = np.array([-(flight_progress[1]), (flight_progress[0])])
@@ -99,19 +102,34 @@ class cost:
             layer_nodes = []
             for j in range(-2, num_of_nodes-1):
                     
-                node_cart = layer_center + perp_vector * dist_btw_nodes * j #scaling up and down from cetner
-                
+                node_cart = layer_center + perp_vector * dist_btw_nodes * j #scaling up and down from center
+
+                #print(node_cart)
+
                 # convert back to lat and long (call cartesian_to_lat_long function)
                 lat, long = self.cartesian_to_lat_long(node_cart[0], node_cart[1], node_cart[2])
+
+                #print(lat, long)
                     
                 # add the four calculated node values for each layer to an array
-                layer_nodes.append((lat, long))
+                newNode = Node(lat, long, False, True); 
+                
+                layer_nodes.append(newNode)
+                
                     
                 # add the new array to a node network
+
             node_network.append(layer_nodes)
 
+            
 
-        return node_network
+
+        return {
+                "source": (lat1, lon1),
+                "layers": np.array(node_network),
+                "destination": (lat2, lon2)
+                }
+
 
     # helper functions 
     def lat_long_to_radians(self, lat, lon):
@@ -203,10 +221,15 @@ class cost:
             bins[(round(cell_lat, 5), round(cell_lon, 5))]+=1
 
         return dict(bins)
-    def get_collision_density_score(self, radius_nm: int=100, cell_degree: float=0.25) -> int:
+        
+    def get_collision_density_score(self, radius_nm: int=100, cell_degree: float=0.25) -> float:
         bins=self.get_air_traffic_density(radius_nm, cell_degree)
-        return sum(bins.values()) 
-    
+        area= math.pi*(radius_nm**2)
+        density = sum(bins.values()) / area if area > 0 else 0
+        min_density = 0.00
+        max_density = 0.002
+        collision_density_score=np.interp(np.clip(density, 0, max_density), [0, max_density], [0.0, 1.0])
+        return float(collision_density_score)
 
 
     def check_warning_status(self, wind, precipitation, lightning, time) -> bool:  
@@ -260,12 +283,15 @@ class cost:
 
 
 # For testing------Ignore
-layers = 2  
 
-node_network = c.get_nodes_per_layer(
-    29.687330584,-82.269665588,
-    33.942791, -118.410042,
-    layers
+cost = Cost(Node(), Node())
+
+num_of_layers = (int) (cost.get_num_of_layers(27.3, -82.55, 33.75,-85.386))
+
+node_network = cost.get_nodes_per_layer(
+    27.3, -82.55,
+    33.75, -85.386,
+    num_of_layers
 )
 
 print(node_network)
