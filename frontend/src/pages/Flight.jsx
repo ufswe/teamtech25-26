@@ -1,7 +1,4 @@
 import { useState } from 'react';
-import { DayPicker } from 'react-day-picker';
-import { format } from 'date-fns';
-import "react-day-picker/dist/style.css";
 import "../components/Map.css";
 import "../styles/flight.css";
 import Map from "../components/Map";
