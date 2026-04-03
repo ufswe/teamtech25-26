@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import "../components/Map.css";
 import "../styles/flight.css";
-import Map from "../components/Map";
+import FlightMap from "../components/Map";
+import MapTilerRadarPreview from "../components/MapTilerRadarPreview.jsx"; // radar overlay component
 import Dropdown from "../components/Dropdown.jsx";
 import Button from "../components/Button.jsx";
 import Card from "../components/Card.jsx";
@@ -41,6 +42,20 @@ export default function Flight() {
 
   const [deptDate, setDeptDate] = useState(new Date());
   const [arrivalDate, setArrivalDate] = useState(new Date());
+
+  const formatDateTime = (dateValue, timeValue) => {
+    if (!dateValue) return "";
+    const dateObj = new Date(dateValue);
+    const timeString = timeValue && timeValue.length ? timeValue : "00:00";
+    const [hours, minutes] = timeString.split(":");
+    const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+    const day = String(dateObj.getDate()).padStart(2, "0");
+    const year = dateObj.getFullYear();
+    return `${month}/${day}/${year} ${hours}:${minutes}`;
+  };
+
+  const radarStartDate = formatDateTime(deptDate, deptTime);
+  const radarEndDate = formatDateTime(arrivalDate, arrivalTime || deptTime);
 
   return (
     <div className="flight-page">
@@ -105,7 +120,11 @@ export default function Flight() {
       </div>
 
       <div className="output-panel">
-        <Map />
+        <MapTilerRadarPreview
+          weatherRadarVisible={weatherView}
+          startDate={radarStartDate}
+          endDate={radarEndDate}
+        />
         {/* Info panel: map overlay toggles, flight stats, and feasibility */}
         <div className="info-panel">
           <div className="info-panel-top">

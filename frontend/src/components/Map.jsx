@@ -4,7 +4,10 @@ import { MapContainer, TileLayer, Marker, LayerGroup, LayersControl, GeoJSON, Po
 import { useState, useRef, useMemo, useEffect } from 'react'; 
 import 'leaflet/dist/leaflet.css';
 import airportData from "../global-airports.json";
-//airport data from https://github.com/jbrooksuk/JSON-Airports 
+//airport data from https://github.com/jbrooksuk/JSON-Airports // not anymore, using what backend is using 
+
+// !!!!! This is not the map component being used 
+// this is the version using leaflet which did not support an animated weather radar
 
 //API keys
 const MAPTILER_KEY = 'dT0LApeCkzfKLrNt5WIZ';
@@ -78,6 +81,17 @@ function buildHourlyFrames(startDate, endDate) {
     const output = [];
     for (let t = min; t <= max; t += step) output.push({ time: t });
     return output.length ? output : [{ time: Math.floor(Date.now() / 1000) }];
+}
+
+function selectRadarVariable(variables) {
+    if (!Array.isArray(variables)) return null;
+    const radarMatch = variables.find((variable) => {
+        const meta = variable?.metadata?.weather_variable || {};
+        const name = String(meta?.name || "").toLowerCase();
+        const id = String(meta?.variable_id || "").toLowerCase();
+        return name.includes("radar") || id.includes("radar");
+    });
+    return radarMatch || null;
 }
 
 function RainViewerAnimatedPrecip({ startDate, endDate, frame, onFramesChange, onVisibilityChange }) {
@@ -167,9 +181,101 @@ function RainViewerAnimatedPrecip({ startDate, endDate, frame, onFramesChange, o
     );
 }
 
+function MapTilerRadarLayer({ frame, enabled, onFramesChange, onVisibilityChange }) {
+    const [activeFrame, setActiveFrame] = useState(null);
+    const [tileOpacity, setTileOpacity] = useState(0.65);
+    const [attribution, setAttribution] = useState("MapTiler Weather");
 
-// map setup 
-export default function Map() {
+    useEffect(() => {
+        return () => {
+            if (onVisibilityChange) onVisibilityChange(false);
+        };
+    }, [onVisibilityChange]);
+
+    useEffect(() => {
+        let active = true;
+        if (!enabled) {
+            if (onFramesChange) onFramesChange([]);
+            setActiveFrame(null);
+            return () => {
+                active = false;
+            };
+        }
+
+        fetch(`https://api.maptiler.com/weather/latest.json?key=${MAPTILER_KEY}`)
+            .then(res => res.json())
+            .then(data => {
+                if (!active) return;
+                const radarVariable = selectRadarVariable(data?.variables);
+                const keyframes = radarVariable?.keyframes || [];
+                const frames = keyframes
+                    .map((keyframe) => ({
+                        time: Date.parse(keyframe?.timestamp) / 1000,
+                        tilesetId: keyframe?.id
+                    }))
+                    .filter(frameItem => frameItem.tilesetId && Number.isFinite(frameItem.time))
+                    .sort((a, b) => a.time - b.time);
+
+                if (radarVariable?.metadata?.weather_variable?.attribution) {
+                    setAttribution(`MapTiler Weather (${radarVariable.metadata.weather_variable.attribution})`);
+                } else {
+                    setAttribution("MapTiler Weather");
+                }
+
+                if (onFramesChange) onFramesChange(frames);
+            })
+            .catch(() => {
+                if (!active) return;
+                if (onFramesChange) onFramesChange([]);
+            });
+
+        return () => {
+            active = false;
+        };
+    }, [enabled, onFramesChange]);
+
+    useEffect(() => {
+        if (!frame || !frame.tilesetId) return;
+        if (!activeFrame) {
+            setActiveFrame(frame);
+            return;
+        }
+        if (activeFrame.tilesetId !== frame.tilesetId) {
+            setTileOpacity(0);
+            const next = frame;
+            const timer = setTimeout(() => {
+                setActiveFrame(next);
+            }, 120);
+            return () => clearTimeout(timer);
+        }
+        return undefined;
+    }, [frame, activeFrame]);
+
+    if (!activeFrame || !activeFrame.tilesetId) return null;
+
+    return (
+        <TileLayer
+            url={`https://api.maptiler.com/tiles/${activeFrame.tilesetId}/{z}/{x}/{y}?key=${MAPTILER_KEY}`}
+            opacity={tileOpacity}
+            attribution={`&copy; ${attribution}`}
+            maxZoom={18}
+            minZoom={0}
+            className="precip-layer"
+            keepBuffer={2}
+            eventHandlers={{
+                add: () => onVisibilityChange && onVisibilityChange(true),
+                remove: () => onVisibilityChange && onVisibilityChange(false),
+                load: () => setTileOpacity(0.65)
+            }}
+        />
+    );
+}
+
+
+// map setup
+export default function FlightMap({
+     weatherRadarVisible = true, 
+     pathPoints = [] }) {  // PASS NODE COORDINATES IN HERE
 
     const [fullscreen, setFullscreen] = useState(false);
     const containerRef = useRef(null);
@@ -183,6 +289,13 @@ export default function Map() {
     const [precipPlaying, setPrecipPlaying] = useState(true);
     const [isScrubbing, setIsScrubbing] = useState(false);
     const [wasPlayingBeforeScrub, setWasPlayingBeforeScrub] = useState(false);
+
+    const [radarTime, setRadarTime] = useState(null);
+    const [radarEnabled, setRadarEnabled] = useState(false);
+    const [radarFrameIndex, setRadarFrameIndex] = useState(0);
+    const [radarPlaying, setRadarPlaying] = useState(true);
+    const [radarIsScrubbing, setRadarIsScrubbing] = useState(false);
+    const [radarWasPlayingBeforeScrub, setRadarWasPlayingBeforeScrub] = useState(false);
     const showPath = true; // toggle for showing node path
 
     // placeholder range until connected to user-selected dates
@@ -193,10 +306,15 @@ export default function Map() {
         [precipStartDate, precipEndDate]
     );
     const [precipFrames, setPrecipFrames] = useState(defaultFrames);
+    const [radarFrames, setRadarFrames] = useState(defaultFrames);
 
     useEffect(() => {
         if (!precipFrames.length) setPrecipFrames(defaultFrames);
     }, [defaultFrames, precipFrames.length]);
+
+    useEffect(() => {
+        if (!radarFrames.length) setRadarFrames(defaultFrames);
+    }, [defaultFrames, radarFrames.length]);
 
     useEffect(() => {
         if (!precipFrames.length) return;
@@ -204,9 +322,19 @@ export default function Map() {
     }, [precipFrames, precipFrameIndex]);
 
     useEffect(() => {
+        if (!radarFrames.length) return;
+        if (radarFrameIndex >= radarFrames.length) setRadarFrameIndex(0);
+    }, [radarFrames, radarFrameIndex]);
+
+    useEffect(() => {
         if (!precipFrames.length) return;
         setPrecipTime(precipFrames[precipFrameIndex]?.time);
     }, [precipFrames, precipFrameIndex]);
+
+    useEffect(() => {
+        if (!radarFrames.length) return;
+        setRadarTime(radarFrames[radarFrameIndex]?.time);
+    }, [radarFrames, radarFrameIndex]);
 
     useEffect(() => {
         if (!precipEnabled || !precipPlaying || isScrubbing || precipFrames.length <= 1) return undefined;
@@ -215,6 +343,14 @@ export default function Map() {
         }, 1000);
         return () => clearInterval(interval);
     }, [precipEnabled, precipPlaying, isScrubbing, precipFrames.length]);
+
+    useEffect(() => {
+        if (!radarEnabled || !radarPlaying || radarIsScrubbing || radarFrames.length <= 1) return undefined;
+        const interval = setInterval(() => {
+            setRadarFrameIndex(prev => (prev + 1) % radarFrames.length);
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [radarEnabled, radarPlaying, radarIsScrubbing, radarFrames.length]);
 
     const filteredAirports = useMemo(() => ({
         ...airportData,
@@ -235,20 +371,10 @@ export default function Map() {
 
     const airportBounds = selectedCoords.length ? selectedCoords : [dICenter, oICenter].filter(Boolean);
 
-    // replace this array with the array of nodes between the airports, [lat,long]
-    const customWaypointPoints = [
-        [29.6901, -82.271797],
-        [29.297568, -82.412414],
-        [29.542331, -81.718552],
-        [28.937368, -82.137329],
-        [29.182131, -81.443466],
-        [28.577168, -81.862244],
-        [28.821931, -81.168381],
-        [28.429399, -81.308998]
-    ];
-
-    // computing path
-    const waypointPath = customWaypointPoints;
+    // computing path (default to straight line unless pathPoints is provided)
+    const waypointPath = Array.isArray(pathPoints) && pathPoints.length
+        ? pathPoints
+        : [dICenter, oICenter].filter(Boolean);
 
     useEffect(() => {
         if (mapRef.current && airportBounds.length) {
@@ -391,6 +517,18 @@ export default function Map() {
                     />
                 </LayersControl.Overlay>
 
+                {/* MapTiler Weather Radar */}
+                {weatherRadarVisible ? (
+                    <LayersControl.Overlay checked name="Weather Radar (MapTiler)">
+                        <MapTilerRadarLayer
+                            frame={radarFrames[radarFrameIndex]}
+                            enabled={weatherRadarVisible}
+                            onFramesChange={setRadarFrames}
+                            onVisibilityChange={setRadarEnabled}
+                        />
+                    </LayersControl.Overlay>
+                ) : null}
+
                 </LayersControl>
             </MapContainer>
             {precipEnabled && precipFrames.length ? (
@@ -445,6 +583,63 @@ export default function Map() {
                                 }}
                                 className="precip-scrubber"
                                 aria-label="Precipitation time scrubber"
+                            />
+                        </div>
+                    ) : null}
+                </div>
+            ) : null}
+            {weatherRadarVisible && radarEnabled && radarFrames.length ? (
+                <div className="precip-time-bar">
+                    <div className="precip-time-text">
+                        {radarTime
+                            ? `Weather Radar: ${
+                                new Date(radarTime * 1000).toLocaleString("en-US", {
+                                    month: "short",
+                                    day: "2-digit",
+                                    year: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    timeZone: "UTC"
+                                })
+                            } UTC`
+                            : "Weather Radar: Loading..."}
+                    </div>
+                    {radarFrames.length > 1 ? (
+                        <div className="precip-controls">
+                            <button
+                                type="button"
+                                className="precip-play-btn"
+                                onClick={() => setRadarPlaying(prev => !prev)}
+                                aria-pressed={radarPlaying}
+                            >
+                                {radarPlaying ? "Pause" : "Play"}
+                            </button>
+                            <input
+                                type="range"
+                                min="0"
+                                max={Math.max(radarFrames.length - 1, 0)}
+                                value={radarFrameIndex}
+                                onChange={(e) => setRadarFrameIndex(Number(e.target.value))}
+                                onMouseDown={() => {
+                                    setRadarWasPlayingBeforeScrub(radarPlaying);
+                                    setRadarPlaying(false);
+                                    setRadarIsScrubbing(true);
+                                }}
+                                onMouseUp={() => {
+                                    setRadarIsScrubbing(false);
+                                    setRadarPlaying(radarWasPlayingBeforeScrub);
+                                }}
+                                onTouchStart={() => {
+                                    setRadarWasPlayingBeforeScrub(radarPlaying);
+                                    setRadarPlaying(false);
+                                    setRadarIsScrubbing(true);
+                                }}
+                                onTouchEnd={() => {
+                                    setRadarIsScrubbing(false);
+                                    setRadarPlaying(radarWasPlayingBeforeScrub);
+                                }}
+                                className="precip-scrubber"
+                                aria-label="Weather radar time scrubber"
                             />
                         </div>
                     ) : null}
