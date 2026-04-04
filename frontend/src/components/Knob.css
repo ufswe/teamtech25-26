@@ -34,6 +34,13 @@
   justify-content: center;
 }
 
+.knob-container-wrapper {
+    display: flex;
+    justify-content: flex-start; 
+    align-items: flex-start;
+    gap: 1rem; /* optional spacing */
+}
+
 .knob-container:active {
   cursor: grabbing;
 }
@@ -107,8 +114,9 @@
 /* row of knobs */
 .priority-knobs {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 24px; /* wider spacing between knobs (was 16px) */
+  margin-left: 30px;
 }
 
 /* push the whole section toward the bottom of the control panel */
@@ -121,9 +129,10 @@
 /* clear + enter buttons */
 .priority-buttons {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 48px;
   margin-top: 12px;
+  margin-left: 250px;
 }
 
 /* grey clear button */

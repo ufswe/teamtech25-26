@@ -102,7 +102,9 @@
     border-radius: 10px;
     padding: 1rem;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    margin: 1rem 0;
+    transform: scale(0.80);
+    transform-origin: top left;
+    margin-bottom: -50px;
 }
 
 .outside-date{
@@ -134,4 +136,11 @@
 .readonly-calendar .rdp-day:hover {
     background-color: transparent;
     cursor: default;
+}
+
+.info-stat-row {
+  display: flex;
+  flex-direction: row; 
+  margin-top: 55px;
+  font-size: 0.9rem;       
 }
