@@ -1,6 +1,6 @@
 import "./Input.css"
 
-export default function Input({ label, value, onChange, placeholder, type = "text" }) {
+export default function Input({ label, value, onChange, placeholder, type = "text", readOnly = false }) {
     return(
         <div className = "input-wrapper">
             {label && <label className="input-label">{label}</label>}
@@ -10,6 +10,7 @@ export default function Input({ label, value, onChange, placeholder, type = "tex
                 value={value}
                 onChange={e => onChange(e.target.value)}
                 placeholder={placeholder}
+                readOnly={readOnly}
             />
         </div>
     )

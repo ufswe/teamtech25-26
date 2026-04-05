@@ -2,14 +2,17 @@
 
 .flight-page {
     font-family: "Instrument Sans", sans-serif;
-    height: 100vh;
+    min-height: 100vh;
     background-color: rgb(222, 239, 250);
     display: flex;
     flex-direction: row;
 }
 
+/* Column layout so priority-selection can push to the bottom via margin-top:auto */
 .control-panel {
     flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .flight-info {
@@ -35,9 +38,109 @@
 
 .timezone-label {
     margin: 0;
-    padding-top: 1.6rem;
 }
 
+/* Right side: map on top, info panel below, stacked vertically */
 .output-panel {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 1rem 0 0;
+}
+
+/* Info panel below the map */
+.info-panel {
+    background-color: rgb(222, 239, 250);
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Top row: toggles on the left, stats on the right */
+.info-panel-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem;
+}
+
+.info-toggles {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.info-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Individual stat row (e.g. Duration, Carbon Emission) */
+.info-stat-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: "Instrument Sans", sans-serif;
+    font-size: 0.9rem;
+    color: #1b3a6b;
+}
+
+.info-stat-label {
+    font-weight: 600;
+}
+
+.info-stat-value {
+    font-weight: 400;
+}
+
+/* Styling for the calendars */
+.rdp-root {
+    font-family: "Instrument Sans", sans-serif;
+    background-color: white;
+    border-radius: 10px;
+    padding: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transform: scale(0.80);
+    transform-origin: top left;
+    margin-bottom: -50px;
+}
+
+.outside-date{
+  color: rgb(176, 176, 176);
+}
+
+.today-date {
+    color: blue;
+}
+
+.rdp-day:hover {
+    background-color: lightgray;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.dept-date {
+    background-color: rgba(46, 84, 159, 1);
+    color: white;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+.readonly-calendar {
+    --rdp-disabled-opacity: 1;      /* keep disabled days fully visible */
+    --rdp-background-color: transparent; /* remove hover/focus background */
+}
+
+.readonly-calendar .rdp-day:hover {
+    background-color: transparent;
+    cursor: default;
+}
+
+.info-stat-row {
+  display: flex;
+  flex-direction: row; 
+  margin-top: 55px;
+  font-size: 0.9rem;       
 }

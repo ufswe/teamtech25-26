@@ -2,7 +2,7 @@ from os import path
 import queue
 import heapq
 
-from calculations import cost_function
+from calculations.cost_function import Cost
 
 
 class Graph:
@@ -14,11 +14,19 @@ class Graph:
     def add_vertex(self, node, cost):
         pass
 
+    # #CURRENT - broken
+    # def initialize_layers(self, layers):
+    #     self._layers = layers[0]        # ← layers[0] is [src_node], so this sets _layers = a single Node list
+    #     for layer in layers[1]:         # ← this appends each inner layer correctly
+    #         self._layers.append(layer)
+    #     self._layers.append(layers[2])  # ← layers[2] is [dest_node], appends the whole list as one element
+
     def initialize_layers(self, layers):
-        self._layers = layers[0]
-        for layer in layers[1]:
+        self._layers = []
+        self._layers.append(layers[0])          # append [src_node] as a layer
+        for layer in layers[1]:                 # append each middle layer
             self._layers.append(layer)
-        self._layers.append(layers[2])
+        self._layers.append(layers[2])          # append [dest_node] as a layer
 
     def min_cost_path(self, start, end):
        path = []
@@ -42,7 +50,10 @@ class Graph:
                for neighbor in self._adjacency_list.get(node, []):
                     if not neighbor.isOpen:
                        continue
-                    cost_to_neighbor = cost_function.get_total_cost(node, neighbor) + self._dp_table[node][0]
+                    #create a Cost obj first, then call the method bc get_total_cost is
+                    #a part of the Cost class
+                    cost_obj = Cost(node, neighbor)
+                    cost_to_neighbor = cost_obj.get_total_cost() + self._dp_table[node][0]
                     if cost_to_neighbor < self._dp_table[neighbor][0]:
                        self._dp_table[neighbor] = (cost_to_neighbor, node)
                     

@@ -283,7 +283,8 @@ class Cost:
         #Placeholder for now 
         distance =  self.get_distance(self.src.getLatitude(), self.src.getLongitude(), self.dest.getLatitude(), self.dest.getLongitude())
         time = self.time_of_flight(distance) # lower the better 
-        collision_density = self.get_collision_density_score()
+        #&commented out for now
+        #collision_density = self.get_collision_density_score()
         carbon_emissions = self.get_carbon_emissions() # lower the better
 
         w1 = 0.25
@@ -291,25 +292,25 @@ class Cost:
         w3 = 0.35 
         w4 = 0.25 
 
-        return (w1 * distance + w2 * time + w3 * collision_density + w4 * carbon_emissions)
+        return (w1 * distance + w2 * time + w4 * carbon_emissions)
 
 
 
 
 
-# For testing------Ignore
+# # For testing------Ignore
 
-cost = Cost(Node(), Node())
+# cost = Cost(Node(), Node())
 
-num_of_layers = (int) (cost.get_num_of_layers(27.3, -82.55, 33.75,-85.386))
+# num_of_layers = (int) (cost.get_num_of_layers(27.3, -82.55, 33.75,-85.386))
 
-node_network = cost.get_nodes_per_layer(
-    27.3, -82.55,
-    33.75, -85.386,
-    num_of_layers
-)
+# node_network = cost.get_nodes_per_layer(
+#     27.3, -82.55,
+#     33.75, -85.386,
+#     num_of_layers
+# )
 
-# print(node_network)
+# # print(node_network)
 
 
 
