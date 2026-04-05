@@ -21,13 +21,17 @@ class Cost:
         # Parameters for Boeing 737 model (uncomment)
         #C)2/kg fuel burned
         self.k = 3.16 
-        self.specific_fuel_consumption = 1.734*10^-7 #(kg of fuel/thrust/second)
-        self.aircraft_mass_takeoff = 79002 #kg
-        self.aircraft_mass_landing = 66349 #kg
-        self.aircraft_weight = self.aircraft_mass_takeoff * self.aircraft_mass_landing * self.g *.5 #N
+        self.g = 9.81 #m/s^2
         self.LD = 18.1 #Lift to drag ratio
         self.speed = 850 #km/h (cruising speed)
+
+
+        self.specific_fuel_consumption = 1.734*10E-7 #(kg of fuel/thrust/second)
+        self.aircraft_mass_takeoff = 79002 #kg
+        self.aircraft_mass_landing = 66349 #kg
         self.g = 9.81 #m/s^2
+        self.aircraft_weight = self.aircraft_mass_takeoff * self.aircraft_mass_landing * self.g *.5 #N
+        
         # self.fuel_mass_flow = self.specific_fuel_consumption * self.aircraft_weight/self.LD #(kg/s)
 
         #weather risk bound variables
@@ -191,7 +195,7 @@ class Cost:
     def get_carbon_emissions(self):
         fuel_mass_flow = self.specific_fuel_consumption * (self.aircraft_weight/ self.LD)
 
-        fuel_mass_entire_trip = fuel_mass_flow * (self.time_of_flight(self,distance) * 3600)
+        fuel_mass_entire_trip = fuel_mass_flow * (self.time_of_flight(self.get_distance(self.src.getLatitude(), self.src.getLongitude(), self.dest.getLatitude(), self.dest.getLongitude())) * 3600)
 
         CO2 = self.k * fuel_mass_entire_trip
 
@@ -266,17 +270,21 @@ class Cost:
 
         return Warning
     
-    def time_of_flight(self,distance):
-        time = (distance/self.speed)/3600 #km/s
+    def time_of_flight(self, distance):
+
+        # print(distance)
+
+        time = ( distance / self.speed) /3600 #km/s
+
         return time
 
     # returns overall cost 
     def get_total_cost(self):
         #Placeholder for now 
-        distance = 0 # lower the better
-        time = 0 # lower the better 
+        distance =  self.get_distance(self.src.getLatitude(), self.src.getLongitude(), self.dest.getLatitude(), self.dest.getLongitude())
+        time = self.time_of_flight(distance) # lower the better 
         collision_density = self.get_collision_density_score()
-        carbon_emissions = 0
+        carbon_emissions = self.get_carbon_emissions() # lower the better
 
         w1 = 0.25
         w2 = 0.25 
@@ -291,15 +299,15 @@ class Cost:
 
 # For testing------Ignore
 
-# cost = Cost(Node(), Node())
+cost = Cost(Node(), Node())
 
-# num_of_layers = (int) (cost.get_num_of_layers(27.3, -82.55, 33.75,-85.386))
+num_of_layers = (int) (cost.get_num_of_layers(27.3, -82.55, 33.75,-85.386))
 
-# node_network = cost.get_nodes_per_layer(
-#     27.3, -82.55,
-#     33.75, -85.386,
-#     num_of_layers
-# )
+node_network = cost.get_nodes_per_layer(
+    27.3, -82.55,
+    33.75, -85.386,
+    num_of_layers
+)
 
 # print(node_network)
 
