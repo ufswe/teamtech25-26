@@ -5,7 +5,7 @@ import openmeteo_requests
 import pandas as pd
 import requests_cache
 from retry_requests import retry
-from calculations.cost_function import cost
+from calculations.cost_function import Cost
 from data_structures.graph import Graph
 from data_structures.node import Node
 
@@ -69,14 +69,14 @@ def testing2():
     dest = Node(lax_lat, lax_long, True, True)
 
     #cost object from calculations 
-    cost_func = cost(src, dest)
-    num_layers = int(cost_func.get_num_of_layers())
+    cost_func = Cost(src, dest)
+    num_layers = int(cost_func.get_num_of_layers(jfk_lat, jfk_long, lax_lat, lax_long))
     nodes_per_layer = cost_func.get_nodes_per_layer(jfk_lat, jfk_long, lax_lat, lax_long, num_layers)
     
     #graph object from backend
     graph_obj = Graph()
     graph_obj.initialize_layers(nodes_per_layer)
-    graph_obj.build_adjacency_list(nodes_per_layer)
+    graph_obj.build_adjacency_list()
     min_cost, path = graph_obj.min_cost_path(src, dest) #optimal path
     cleaned_path = graph_obj.location(path) #cleaned path to return to frontend
     return jsonify({"optimal_path": cleaned_path, "min_cost": min_cost}), 200 #placeholder

@@ -1,6 +1,6 @@
 from tkinter import NO
 from turtle import distance
-from ..data_structures.node import Node
+from data_structures.node import Node
 import math
 import numpy as np
 from collections import defaultdict
@@ -125,11 +125,10 @@ class Cost:
             
 
 
-        return {
-                "source": (lat1, lon1),
-                "layers": np.array(node_network),
-                "destination": (lat2, lon2)
-                }
+        return [[Node(lat1, lon1, True, True)], 
+                node_network,
+                [Node(lat2, lon2, True, True)]
+                ]
 
 
     # helper functions 
@@ -292,17 +291,17 @@ class Cost:
 
 # For testing------Ignore
 
-cost = Cost(Node(), Node())
+# cost = Cost(Node(), Node())
 
-num_of_layers = (int) (cost.get_num_of_layers(27.3, -82.55, 33.75,-85.386))
+# num_of_layers = (int) (cost.get_num_of_layers(27.3, -82.55, 33.75,-85.386))
 
-node_network = cost.get_nodes_per_layer(
-    27.3, -82.55,
-    33.75, -85.386,
-    num_of_layers
-)
+# node_network = cost.get_nodes_per_layer(
+#     27.3, -82.55,
+#     33.75, -85.386,
+#     num_of_layers
+# )
 
-print(node_network)
+# print(node_network)
 
 
 
