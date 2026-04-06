@@ -131,8 +131,8 @@ export default function MapTilerRadarPreview({
     const map = new maptilersdk.Map({
       container: mapContainerRef.current,
       style: `https://api.maptiler.com/maps/dataviz-v4/style.json?key=${MAPTILER_KEY}`,
-      center: oICenter ? [oICenter[1], oICenter[0]] : [-81.7, 29.2],
-      zoom: 6,
+      center: [-98.5, 39.5], //center of USA CHANGE
+      zoom: 3, // CHANGE
       navigationControl: false
     });
 
@@ -154,19 +154,6 @@ export default function MapTilerRadarPreview({
             "line-width": 3
           }
         });
-      }
-
-
-      // markers 
-      if (dICenter) {
-        new maptilersdk.Marker({ color: "#78b4f9" })
-          .setLngLat([dICenter[1], dICenter[0]])
-          .addTo(map);
-      }
-      if (oICenter) {
-        new maptilersdk.Marker({ color: "#1d3557" })
-          .setLngLat([oICenter[1], oICenter[0]])
-          .addTo(map);
       }
 
       const radarLayer = new RadarLayer({ opacity: 0.85 });
@@ -211,22 +198,46 @@ export default function MapTilerRadarPreview({
     };
   }, []);
 
+  const markersRef = useRef([]);
+    
   useEffect(() => {
-    if (!radarReady || !radarLayerRef.current) return;
-    const layerStart = radarLayerRef.current.getAnimationStart();
-    const layerEnd = radarLayerRef.current.getAnimationEnd();
-    const selectedStart = parseDateInput(startDate);
-    const selectedEnd = parseDateInput(endDate);
-    const range = getRadarRange(layerStart, layerEnd, selectedStart, selectedEnd);
-    setRadarRange(range);
+    if(!mapRef.current || waypointPath.length == 0) return;
 
-    const currentTime = range.start;
-    radarLayerRef.current.setAnimationTime(currentTime);
-    setRadarTime(currentTime);
-    setDisplayTime(currentTime);
-    playAnchorRef.current = { time: currentTime, realMs: Date.now() };
-    animationRef.current.time = currentTime;
-  }, [radarReady, startDate, endDate]);
+    //remove old markers first
+    markersRef.current.forEach(m => m.remove());
+    markersRef.current = [];
+
+    //dept marker
+    const first = waypointPath[0];
+    const depMarker = new maptilersdk.Marker({color: "#78B4F9"})
+      .setLngLat([first[1], first[0]])
+      .addTo(mapRef.current);
+    markersRef.current.push(depMarker);
+
+    //arrival marker
+    const last = waypointPath[waypointPath.length-1];
+    const arrMarker = new maptilersdk.Marker({color: "#1D3557"})
+      .setLngLat([last[1], last[0]])
+      .addTo(mapRef.current);
+    markersRef.current.push(arrMarker);
+  }, [waypointPath]);
+
+  useEffect(() => {
+    if (!radarReady || !radarLayerRef.current) return;
+    const layerStart = radarLayerRef.current.getAnimationStart();
+    const layerEnd = radarLayerRef.current.getAnimationEnd();
+    const selectedStart = parseDateInput(startDate);
+    const selectedEnd = parseDateInput(endDate);
+    const range = getRadarRange(layerStart, layerEnd, selectedStart, selectedEnd);
+    setRadarRange(range);
+
+    const currentTime = range.start;
+    radarLayerRef.current.setAnimationTime(currentTime);
+    setRadarTime(currentTime);
+    setDisplayTime(currentTime);
+    playAnchorRef.current = { time: currentTime, realMs: Date.now() };
+    animationRef.current.time = currentTime;
+  }, [radarReady, startDate, endDate]);
 
   useEffect(() => {
     if (!radarPlaying || isScrubbing || !weatherRadarVisible) {
