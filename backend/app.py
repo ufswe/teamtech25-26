@@ -14,6 +14,8 @@ CORS(app)
 
 @app.route('/api/optimal-path', methods=['POST'])
 def get_optimal_path():
+    data = request.json
+    
     jfk_lat = 40.6446
     jfk_long = -73.7822
     lax_lat = 33.9425

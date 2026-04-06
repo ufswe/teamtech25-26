@@ -15,7 +15,8 @@ class Graph:
         pass
 
     def initialize_layers(self, layers):
-        self._layers = layers[0]
+        self._layers = []
+        self._layers.append(layers[0])
         for layer in layers[1]:
             self._layers.append(layer)
         self._layers.append(layers[2])

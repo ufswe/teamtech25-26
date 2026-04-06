@@ -284,7 +284,7 @@ class Cost:
         #Placeholder for now 
         distance =  self.get_distance(self.src.getLatitude(), self.src.getLongitude(), self.dest.getLatitude(), self.dest.getLongitude())
         time = self.time_of_flight(distance) # lower the better 
-        collision_density = self.get_collision_density_score()
+        #collision_density = self.get_collision_density_score()
         carbon_emissions = self.get_carbon_emissions() # lower the better
 
         w1 = 0.25
@@ -292,7 +292,7 @@ class Cost:
         w3 = 0.35 
         w4 = 0.25 
 
-        return (w1 * distance + w2 * time + w3 * collision_density + w4 * carbon_emissions)
+        return (w1 * distance + w2 * time + w4 * carbon_emissions)
 
 
 
@@ -301,8 +301,8 @@ class Cost:
 # For testing------Ignore
 
 # cost = Cost(Node(self, latitude, longitude, airport, isOpen))
-cost = Cost(Node(27.3, -82.55, True, False), Node(27.4, -82.386, True, False))
-print(cost.get_total_cost())
+# cost = Cost(Node(27.3, -82.55, True, False), Node(27.4, -82.386, True, False))
+# print(cost.get_total_cost())
 
 # num_of_layers = (int) (cost.get_num_of_layers(27.3, -82.55, 33.75,-85.386))
 
