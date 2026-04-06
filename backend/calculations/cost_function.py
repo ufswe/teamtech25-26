@@ -129,11 +129,10 @@ class Cost:
             
 
 
-        return {
-                "source": (lat1, lon1),
-                "layers": np.array(node_network),
-                "destination": (lat2, lon2)
-                }
+        return [[Node(lat1, lon1, True, True)],
+        node_network,
+        [Node(lat2, lon2, True, True)]
+        ]
 
 
     # helper functions 

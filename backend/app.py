@@ -13,37 +13,37 @@ app = Flask(__name__)
 CORS(app)
 
 @app.route('/api/optimal-path', methods=['POST'])
+@app.route('/api/optimal-path', methods=['POST'])
 def get_optimal_path():
     data = request.json
+    src_lat = data.get("src_lat")
+    src_long = data.get("src_long")
+    dest_lat = data.get("dest_lat")
+    dest_long = data.get("dest_long")
+
+    if None in (src_lat, src_long, dest_lat, dest_long):
+        return jsonify({"error": "Missing coordinates"}), 400
+
+    #create src and dest nodes
+    src = Node(src_lat, src_long, True, True)
+    dest = Node(dest_lat, dest_long, True, True)
     
-    jfk_lat = 40.6446
-    jfk_long = -73.7822
-    lax_lat = 33.9425
-    lax_long = -118.4081
-
-    #hardcoded jfk and lax airports
-    src = Node(jfk_lat, jfk_long, True, True)
-    dest = Node(lax_lat, lax_long, True, True)
-
-    #cost object from calculations 
+    # cost object from calculations
     cost_func = Cost(src, dest)
-    num_layers = int(cost_func.get_num_of_layers(jfk_lat, jfk_long, lax_lat, lax_long))
-    nodes_per_layer = cost_func.get_nodes_per_layer(jfk_lat, jfk_long, lax_lat, lax_long, num_layers)
-    
+    num_layers = int(cost_func.get_num_of_layers(src_lat, src_long, dest_lat, dest_long))
+    nodes_per_layer = cost_func.get_nodes_per_layer(src_lat, src_long, dest_lat, dest_long, num_layers)
+    print("nodes_per_layer", nodes_per_layer)
+
     #graph object from backend
     graph_obj = Graph()
     graph_obj.initialize_layers(nodes_per_layer)
+    print("layers:", graph_obj._layers)
+
     graph_obj.build_adjacency_list()
     min_cost, path = graph_obj.min_cost_path(src, dest) #optimal path
     cleaned_path = graph_obj.location(path) #cleaned path to return to frontend
+    print("cleaned_path:", cleaned_path)
     return jsonify({"optimal_path": cleaned_path, "min_cost": min_cost}), 200 #placeholder
-
-    # TODO: implement
-    # - get data from frontend
-    # - create node network
-    # - create graph
-    # - find optimal path
-    pass
 
 @app.route('/api/optimal-path2', methods=['POST'])
 def get_weather():

@@ -2,7 +2,7 @@ from os import path
 import queue
 import heapq
 
-from calculations import cost_function
+from calculations.cost_function import Cost
 
 
 class Graph:
@@ -43,7 +43,8 @@ class Graph:
                for neighbor in self._adjacency_list.get(node, []):
                     if not neighbor.isOpen:
                        continue
-                    cost_to_neighbor = cost_function.get_total_cost(node, neighbor) + self._dp_table[node][0]
+                    cost_obj = Cost(node,neighbor)
+                    cost_to_neighbor = cost_obj.get_total_cost() + self._dp_table[node][0]
                     if cost_to_neighbor < self._dp_table[neighbor][0]:
                        self._dp_table[neighbor] = (cost_to_neighbor, node)
                     
@@ -112,35 +113,6 @@ class Graph:
                     self._adjacency_list[node].append(next_node)
     
         return self._adjacency_list
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     def dijkstra(self, start, end):
        dist = {node: float('inf') for node in self._adjacency_list}
