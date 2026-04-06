@@ -1,6 +1,6 @@
 from tkinter import NO
 from turtle import distance
-from ..data_structures.node import Node
+from data_structures.node import Node
 import math
 import numpy as np
 from collections import defaultdict
