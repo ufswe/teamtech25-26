@@ -1,0 +1,156 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;700&display=swap');
+
+/* each knob sits in a vertical column: label on top, dial below */
+.knob-wrapper {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  font-family: "Instrument Sans", sans-serif;
+}
+
+/* pill-shaped label above the knob (e.g. "Carbon Emissions") */
+.knob-label {
+  background-color: white;
+  border: 1px solid #1a2e5a;
+  border-radius: 20px;
+  padding: 6px 20px;   /* increased from 4px 16px for better touch area */
+  font-size: 1rem;     /* increased from 0.8rem for readability */
+  font-weight: 700;
+  color: #1a2e5a;
+  text-align: center;
+  margin-bottom: 6px;
+  white-space: nowrap;
+}
+
+/* the area the user can click/drag to rotate */
+.knob-container {
+  position: relative;
+  width: 190px;   /* scaled up from 140px to match Figma */
+  height: 190px;  /* scaled up from 140px to match Figma */
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.knob-container-wrapper {
+    display: flex;
+    justify-content: flex-start; 
+    align-items: flex-start;
+    gap: 1rem; /* optional spacing */
+}
+
+.knob-container:active {
+  cursor: grabbing;
+}
+
+.knob-svg {
+  display: block;
+}
+
+/* white circle in the center that shows the value */
+.knob-value-oval {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  border-radius: 50%;
+  width: 46px;   /* enlarged from 36px to match bigger knob */
+  height: 46px;  /* enlarged from 36px to match bigger knob */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 1;
+}
+
+/* the number displayed in the center */
+.knob-value {
+  color: #1a2e5a;
+  font-size: 1.25rem; /* bumped from 1rem to stay proportional with larger knob */
+  font-weight: 700;
+  font-family: "Instrument Sans", sans-serif;
+  user-select: none;
+}
+
+/* text input that appears when user clicks the center value */
+.knob-input {
+  width: 24px;
+  height: 20px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #1a2e5a;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: "Instrument Sans", sans-serif;
+  text-align: center;
+  padding: 0;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+/* hide the up/down arrows on the number input */
+.knob-input::-webkit-outer-spin-button,
+.knob-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* --- priority section layout (used on the Flight page) --- */
+
+.priority-heading {
+  font-family: "Instrument Sans", sans-serif;
+  font-size: 1.2rem; /* slightly larger heading to match scaled-up knobs */
+  font-weight: 700;
+  color: #1a2e5a;
+  text-align: center;
+  margin: 0.5rem 0 1.5rem 0; /* added bottom spacing between heading and knobs */
+}
+
+/* row of knobs */
+.priority-knobs {
+  display: flex;
+  justify-content: flex-start;
+  gap: 24px; /* wider spacing between knobs (was 16px) */
+  margin-left: 30px;
+}
+
+/* push the whole section toward the bottom of the control panel */
+.priority-selection {
+  margin-top: auto;
+  padding-top: 0; /* removed 4rem top padding; margin-top:auto handles spacing now */
+  padding-bottom: 2rem;
+}
+
+/* clear + enter buttons */
+.priority-buttons {
+  display: flex;
+  justify-content: flex-start;
+  gap: 48px;
+  margin-top: 12px;
+  margin-left: 250px;
+}
+
+/* grey clear button */
+.priority-buttons .button:first-child {
+  background-color: #b0b8c9;
+  color: white;
+}
+
+.priority-buttons .button:first-child:hover {
+  background-color: #969eae;
+}
+
+/* navy enter button */
+.priority-buttons .button:last-child {
+  background-color: #1a2e5a;
+  color: white;
+}
+
+.priority-buttons .button:last-child:hover {
+  background-color: #132247;
+}

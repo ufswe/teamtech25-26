@@ -1,0 +1,32 @@
+/* Feasibility bar: label on the left, filled track on the right */
+.feasibility-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.feasibility-label {
+  font-family: "Instrument Sans", sans-serif;
+  font-size: 0.9rem;
+  color: #1b3a6b;
+  white-space: nowrap;
+}
+
+/* Grey background track that holds the filled portion */
+.feasibility-track {
+  flex: 1;
+  height: 20px;
+  background-color: #d9d9d9;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* Filled portion width is set dynamically via inline style */
+.feasibility-fill {
+  height: 100%;
+  background-color: #1b3a6b;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
