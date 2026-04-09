@@ -14,7 +14,7 @@ export default function Dropdown({ label, value, onChange, options = [], placeho
       const match = options.find(o => o.value === value);
       if (match) setQuery(match.label);
     }
-  }, [value]);
+  }, [value, options]);
 
   // Close on outside click
   useEffect(() => {

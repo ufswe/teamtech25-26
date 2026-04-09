@@ -38,11 +38,19 @@ export default function Flight() {
 
   const [searchParams] = useSearchParams();
 
-  const [deptAirport, setDeptAirport] = useState();
-  const [arrivalAirport, setArrivalAirport] = useState();
+  const [deptAirport, setDeptAirport] = useState(() => (
+    sessionStorage.getItem("flight.deptAirport") || ""
+  ));
+  const [arrivalAirport, setArrivalAirport] = useState(() => (
+    sessionStorage.getItem("flight.arrivalAirport") || ""
+  ));
 
-  const [deptTime, setDeptTime] = useState();
-  const [arrivalTime, setArrivalTime] = useState();
+  const [deptTime, setDeptTime] = useState(() => (
+    sessionStorage.getItem("flight.deptTime") || ""
+  ));
+  const [arrivalTime, setArrivalTime] = useState(() => (
+    sessionStorage.getItem("flight.arrivalTime") || ""
+  ));
 
   // Added different Knob Value components
   const [carbonValue, setCarbonValue] = useState(0);
@@ -50,7 +58,9 @@ export default function Flight() {
   const [travelValue, setTravelValue] = useState(0);
 
   // Toggle states for map overlay layers (default both on)
-  const [weatherView, setWeatherView] = useState(true);
+  const [weatherView, setWeatherView] = useState(() => (
+    sessionStorage.getItem("flight.weatherView") === "true"
+  ));
   const [airTrafficView, setAirTrafficView] = useState(true);
 
   // TODO: NEEDS TO BE FIXED TO BE DYNAMIC
@@ -90,11 +100,53 @@ export default function Flight() {
     }
   }, [deptAirport, arrivalAirport]);
 
-  const [deptDate, setDeptDate] = useState(new Date());
-  const [arrivalDate, setArrivalDate] = useState(new Date());
+  useEffect(() => {
+    sessionStorage.setItem("flight.deptAirport", deptAirport || "");
+  }, [deptAirport]);
+
+  useEffect(() => {
+    sessionStorage.setItem("flight.arrivalAirport", arrivalAirport || "");
+  }, [arrivalAirport]);
+
+  useEffect(() => {
+    sessionStorage.setItem("flight.weatherView", String(weatherView));
+  }, [weatherView]);
+
+  const [deptDate, setDeptDate] = useState(() => {
+    const stored = sessionStorage.getItem("flight.deptDate");
+    return stored ? new Date(stored) : null;
+  });
+  const [arrivalDate, setArrivalDate] = useState(() => {
+    const stored = sessionStorage.getItem("flight.arrivalDate");
+    return stored ? new Date(stored) : null;
+  });
   const [minCost, setMinCost ] = useState(null);
   const [pathError, setPathError ] = useState(null);
   const [optimalPath, setOptimalPath]= useState(null);
+
+  useEffect(() => {
+    sessionStorage.setItem("flight.deptTime", deptTime || "");
+  }, [deptTime]);
+
+  useEffect(() => {
+    sessionStorage.setItem("flight.arrivalTime", arrivalTime || "");
+  }, [arrivalTime]);
+
+  useEffect(() => {
+    if (deptDate) {
+      sessionStorage.setItem("flight.deptDate", deptDate.toISOString());
+    } else {
+      sessionStorage.removeItem("flight.deptDate");
+    }
+  }, [deptDate]);
+
+  useEffect(() => {
+    if (arrivalDate) {
+      sessionStorage.setItem("flight.arrivalDate", arrivalDate.toISOString());
+    } else {
+      sessionStorage.removeItem("flight.arrivalDate");
+    }
+  }, [arrivalDate]);
 
   const formatDateTime = (dateValue, timeValue) => {
     if (!dateValue) return "";
@@ -106,6 +158,11 @@ export default function Flight() {
     const year = dateObj.getFullYear();
     return `${month}/${day}/${year} ${hours}:${minutes}`;
   };
+
+  const today = useMemo(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  }, []);
 
   const clampArrivalDate = (nextArrival, nextDept = deptDate) => {
     if (!nextArrival) return nextArrival;
@@ -133,11 +190,11 @@ export default function Flight() {
   //   }
   // }
   const handleSubmit = async () => {
-    //Ensure both airports are selected
-    if(!deptAirport || !arrivalAirport) {
-      console.log("Make sure both airports are selected");
-      return;
-    }
+    //Ensure both airports are selected
+    if(!deptAirport || !arrivalAirport) {
+      console.log("Make sure both airports are selected");
+      return;
+    }
 
     //Look up their coordinates
     const srcC = getAirportCoords(deptAirport);
@@ -148,20 +205,25 @@ export default function Flight() {
     }
 
     //Call Flask
-    setIsLoading(true);
+    setWeatherView(true);
+    setIsLoading(true);
     try{
-      const response = await fetch("http://localhost:5001/api/optimal-path", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          src_lat: srcC.lat,
-          src_long: srcC.lng,
-          dest_lat: destC.lat,
-          dest_long: destC.lng,
-        }),
-      });
+      const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const response = await fetch("http://localhost:5001/api/optimal-path", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+            src_lat: srcC.lat,
+            src_long: srcC.lng,
+            dest_lat: destC.lat,
+            dest_long: destC.lng,
+        }),
+    });
+    clearTimeout(timeoutId);
 
       //Save the path
       const data = await response.json();
@@ -192,9 +254,11 @@ export default function Flight() {
             < DayPicker 
               mode="single"
               selected={deptDate}
+              disabled={{ before: today }}
               onSelect={(date) => {
-                setDeptDate(date);
-                setArrivalDate((current) => clampArrivalDate(current, date));
+                const next = date || null;
+                setDeptDate(next);
+                setArrivalDate((current) => clampArrivalDate(current, next));
               }}
               showOutsideDays
               modifiersClassNames={{
@@ -223,7 +287,8 @@ export default function Flight() {
             < DayPicker 
               mode="single"
               selected={arrivalDate}
-              onSelect={(date) => setArrivalDate(clampArrivalDate(date))}
+              disabled={{ before: today }}
+              onSelect={(date) => setArrivalDate(clampArrivalDate(date || null))}
               showOutsideDays
               className="readonly-calendar"
               modifiersClassNames={{
@@ -236,7 +301,7 @@ export default function Flight() {
               <Input
                 type="time"
                 value={arrivalTime}
-                readOnly
+                onChange={setArrivalTime}
               />
               <p className="timezone-label">{deptTimezone}</p>
             </div>
