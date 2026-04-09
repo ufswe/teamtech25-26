@@ -1,3 +1,4 @@
+from tkinter import NO
 from turtle import distance
 from ..data_structures.node import Node
 import math
@@ -19,15 +20,20 @@ class Cost:
         
         # Parameters for Boeing 737 model (uncomment)
         #C)2/kg fuel burned
+        self.k = 3.16 
+        self.g = 9.81 #m/s^2
+        self.LD = 18.1 #Lift to drag ratio
+        self.speed = 850 #km/h (cruising speed)
 
-        # self.k = 3.16 
+
+        self.specific_fuel_consumption = 1.734*10E-7 #(kg of fuel/thrust/second)
+        self.aircraft_mass_takeoff = 79002 #kg
+        self.aircraft_mass_landing = 66349 #kg
+        self.g = 9.81 #m/s^2
+        self.aircraft_weight = self.aircraft_mass_takeoff * self.aircraft_mass_landing * self.g *.5 #N
+        
         # self.fuel_mass_flow = self.specific_fuel_consumption * self.aircraft_weight/self.LD #(kg/s)
-        # self.specific_fuel_consumption = 1.734*10^-7 #(kg of fuel/thrust/second)
-        # self.g= 9.81 #m/s^2
-        # self.aircraft_mass_takeoff=79002 #kg
-        # self.aircraft_mass_landing=66349 #kg
-        # self.aircraft_weight = self.aircraft_mass_takeoff * self.aircraft_mass_landing* self.g * .5 #N
-        # self.LD = 18.1 #Lift to drag ratio
+
         #weather risk bound variables
         # self.wind = #(knots)
         # self.precipitation = #(inches)
@@ -47,14 +53,15 @@ class Cost:
 
     def get_nodes_per_layer(self, lat1, lon1, lat2, lon2, num_of_layers):
 
-        # convert latitude longitude to cartesian
+        # convert latitude and longitude to cartesian coordinates
 
         x1, y1, z1 = self.lat_long_to_cartesian(lat1, lon1)
         x2, y2, z2 = self.lat_long_to_cartesian(lat2, lon2)
 
-       # lat1, lon1, lat2, lon2 = self.lat_long_to_cartesian(lat1, lon1),  self.lat_long_to_cartesian(lat2, lon2)
+        # lat1, lon1, lat2, lon2 = self.lat_long_to_cartesian(lat1, lon1),  self.lat_long_to_cartesian(lat2, lon2)
 
-        #create vector from source to destination
+        # create vector from source to destination
+
         src = np.array([x1, y1, z1])
         dest = np.array([x2, y2, z2])
         print(f"src: {src}")
@@ -68,31 +75,26 @@ class Cost:
 
         # calculating the perpendicular vector 
 
-        up = np.array([0, 0, 1]) # just using this for cross product, just points up 
+        up = np.array([0, 0, 1]) # using this for cross product, just points up 
         perp_vector = np.cross(unit_vector, up)
         perp_vector = perp_vector / np.linalg.norm(perp_vector) # normalize vector to become 1
 
-    
-        # num_of_nodes=4
         num_of_nodes = 4
 
         # dist_btw_nodes=5
-        dist_btw_nodes = 20
+        dist_btw_nodes = 5
 
-        # dist_btw_layer=50
         dist_btw_layer = 50
-
-        # node_array = np.array([])
 
         node_network = []
 
         # create a loop that will iterate from 0 to the number of layers-1
-        # shoudl iterate from 1, because layer 0 is the src point
+        # should iterate from 1, because layer 0 is the src point
 
         for i in range (1, num_of_layers):
             flight_progress = unit_vector * dist_btw_layer * i
             print(f"Progress: {flight_progress} i: {i} unit_vector: {unit_vector}")
-            layer_center = src + (flight_progress) # basically moving the central point by the distance along the unit_distance vector
+            layer_center = src + (flight_progress) # basically moves the central point by the distance along the unit_distance vector
 
 
             
@@ -116,10 +118,13 @@ class Cost:
                 #print(lat, long)
                     
                 # add the four calculated node values for each layer to an array
-                layer_nodes.append((lat, long))
+                newNode = Node(lat, long, False, True); 
+                
+                layer_nodes.append(newNode)
                 
                     
                 # add the new array to a node network
+
             node_network.append(layer_nodes)
 
             
@@ -190,7 +195,14 @@ class Cost:
     
     # first calculate fuel mass, then calculate C02
     def get_carbon_emissions(self):
-        pass 
+        fuel_mass_flow = self.specific_fuel_consumption * (self.aircraft_weight/ self.LD)
+
+        fuel_mass_entire_trip = fuel_mass_flow * (self.time_of_flight(self.get_distance(self.src.getLatitude(), self.src.getLongitude(), self.dest.getLatitude(), self.dest.getLongitude())) * 3600)
+
+        CO2 = self.k * fuel_mass_entire_trip
+
+        return CO2
+ 
     
     # Might use flight history for heatmap 
     # traffic
@@ -222,11 +234,12 @@ class Cost:
             bins[(round(cell_lat, 5), round(cell_lon, 5))]+=1
 
         return dict(bins)
+        
     def get_collision_density_score(self, radius_nm: int=100, cell_degree: float=0.25) -> float:
         bins=self.get_air_traffic_density(radius_nm, cell_degree)
         area= math.pi*(radius_nm**2)
         density = sum(bins.values()) / area if area > 0 else 0
-        min_density = 0.00
+        min_density = 0.00 #CHECK THIS
         max_density = 0.002
         collision_density_score=np.interp(np.clip(density, 0, max_density), [0, max_density], [0.0, 1.0])
         return float(collision_density_score)
@@ -259,17 +272,21 @@ class Cost:
 
         return Warning
     
-    def time_of_flight(self,distance):
-        time = (distance/self.speed)/3600 #km/s
+    def time_of_flight(self, distance):
+
+        # print(distance)
+
+        time = ( distance / self.speed) /3600 #km/s
+
         return time
 
     # returns overall cost 
     def get_total_cost(self):
         #Placeholder for now 
-        distance = 0 # lower the better
-        time = 0 # lower the better 
+        distance =  self.get_distance(self.src.getLatitude(), self.src.getLongitude(), self.dest.getLatitude(), self.dest.getLongitude())
+        time = self.time_of_flight(distance) # lower the better 
         collision_density = self.get_collision_density_score()
-        carbon_emissions = 0
+        carbon_emissions = self.get_carbon_emissions() # lower the better
 
         w1 = 0.25
         w2 = 0.25 
@@ -284,17 +301,17 @@ class Cost:
 
 # For testing------Ignore
 
-cost = Cost(Node(), Node())
+# cost = Cost(Node(self, latitude, longitude, airport, isOpen))
+cost = Cost(Node(27.3, -82.55, True, False), Node(27.4, -82.386, True, False))
+print(cost.get_total_cost())
 
-num_of_layers = (int) (cost.get_num_of_layers(27.3, -82.55, 33.75,-85.386))
+# num_of_layers = (int) (cost.get_num_of_layers(27.3, -82.55, 33.75,-85.386))
 
-node_network = cost.get_nodes_per_layer(
-    27.3, -82.55,
-    33.75, -85.386,
-    num_of_layers
-)
+# node_network = cost.get_nodes_per_layer(
+#    27.3, -82.55,
+#    33.75, -85.386, num_of_layers)
 
-print(node_network)
+# print(node_network)
 
 
 
