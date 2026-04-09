@@ -78,7 +78,8 @@ export default function MapTilerRadarPreview({
   weatherRadarVisible = true,
   pathPoints = [],  // PASS THE NODE COORDINATES HERE AS AN ARRAY OF [LAT, LNG]
   startDate = DEFAULT_START_DATE,
-  endDate = DEFAULT_END_DATE
+  endDate = DEFAULT_END_DATE,
+  selectedAirports = []
 }) {
   const [fullscreen, setFullscreen] = useState(false);
   const [containerStyle, setContainerStyle] = useState({});
@@ -102,10 +103,28 @@ export default function MapTilerRadarPreview({
   const hoverRafRef = useRef(null);
   const DEBUG_OVERLAY = false;
 
+  const bringPathToFront = () => {
+    if (!mapRef.current) return;
+    if (mapRef.current.getLayer("flight-path")) {
+      mapRef.current.moveLayer("flight-path");
+    }
+  };
+
+  const selectedCoords = useMemo(() => (
+    airportData.features
+      .filter((feature) => selectedAirports.includes(feature.properties.iata_code))
+      .map((feature) => {
+        const [lng, lat] = feature.geometry.coordinates;
+        return [lat, lng];
+      })
+      .filter(Boolean)
+  ), [selectedAirports]);
+
   const waypointPath = useMemo(() => {
     if (Array.isArray(pathPoints) && pathPoints.length) return pathPoints;
+    if (selectedCoords.length) return selectedCoords;
     return [dICenter, oICenter].filter(Boolean);
-  }, [pathPoints]);
+  }, [pathPoints, selectedCoords]);
 
   const lineFeature = useMemo(() => ({
     type: "Feature",
@@ -159,6 +178,7 @@ export default function MapTilerRadarPreview({
       const radarLayer = new RadarLayer({ opacity: 0.85 });
       radarLayerRef.current = radarLayer;
       map.addLayer(radarLayer);
+      bringPathToFront();
 
       // animated weather radar 
       radarLayer.on("sourceReady", () => {
@@ -284,7 +304,25 @@ export default function MapTilerRadarPreview({
     if (!mapRef.current) return;
     const source = mapRef.current.getSource("flight-path");
     if (source) source.setData(lineFeature);
+    bringPathToFront();
   }, [lineFeature]);
+
+  useEffect(() => {
+    if (!mapRef.current || !waypointPath.length) return;
+    if (waypointPath.length === 1) {
+      const [lat, lng] = waypointPath[0];
+      mapRef.current.easeTo({ center: [lng, lat], zoom: 6, duration: 900 });
+      return;
+    }
+    const bounds = waypointPath.reduce((acc, [lat, lng]) => {
+      acc.extend([lng, lat]);
+      return acc;
+    }, new maptilersdk.LngLatBounds(
+      [waypointPath[0][1], waypointPath[0][0]],
+      [waypointPath[0][1], waypointPath[0][0]]
+    ));
+    mapRef.current.fitBounds(bounds, { padding: 70, duration: 900, maxZoom: 6 });
+  }, [waypointPath]);
 
   useEffect(() => {
     if (!radarLayerRef.current) return;
@@ -322,7 +360,7 @@ export default function MapTilerRadarPreview({
     if (!waypointPath.length) return;
     if (waypointPath.length === 1) {
       const [lat, lng] = waypointPath[0];
-      mapRef.current.easeTo({ center: [lng, lat], zoom: 6 });
+      mapRef.current.easeTo({ center: [lng, lat], zoom: 6, duration: 900 });
       return;
     }
     const bounds = waypointPath.reduce((acc, [lat, lng]) => {
@@ -332,7 +370,7 @@ export default function MapTilerRadarPreview({
       [waypointPath[0][1], waypointPath[0][0]],
       [waypointPath[0][1], waypointPath[0][0]]
     ));
-    mapRef.current.fitBounds(bounds, { padding: 70, duration: 600, maxZoom: 6 });
+    mapRef.current.fitBounds(bounds, { padding: 70, duration: 900, maxZoom: 6 });
   };
 
   return (

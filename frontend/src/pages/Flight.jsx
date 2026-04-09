@@ -107,6 +107,18 @@ export default function Flight() {
     return `${month}/${day}/${year} ${hours}:${minutes}`;
   };
 
+  const clampArrivalDate = (nextArrival, nextDept = deptDate) => {
+    if (!nextArrival) return nextArrival;
+    if (!nextDept) return nextArrival;
+    return nextArrival < nextDept ? nextDept : nextArrival;
+  };
+
+  useEffect(() => {
+    if (deptDate && arrivalDate && arrivalDate < deptDate) {
+      setArrivalDate(deptDate);
+    }
+  }, [deptDate, arrivalDate]);
+
   const radarStartDate = formatDateTime(deptDate, deptTime);
   const radarEndDate = formatDateTime(arrivalDate, arrivalTime || deptTime);
 
@@ -180,7 +192,10 @@ export default function Flight() {
             < DayPicker 
               mode="single"
               selected={deptDate}
-              onSelect={setDeptDate}
+              onSelect={(date) => {
+                setDeptDate(date);
+                setArrivalDate((current) => clampArrivalDate(current, date));
+              }}
               showOutsideDays
               modifiersClassNames={{
                 selected: 'dept-date',
@@ -208,7 +223,7 @@ export default function Flight() {
             < DayPicker 
               mode="single"
               selected={arrivalDate}
-              disabled
+              onSelect={(date) => setArrivalDate(clampArrivalDate(date))}
               showOutsideDays
               className="readonly-calendar"
               modifiersClassNames={{
@@ -256,6 +271,7 @@ export default function Flight() {
           startDate={radarStartDate}
           endDate={radarEndDate}
           pathPoints={optimalPath}
+          selectedAirports={[deptAirport, arrivalAirport].filter(Boolean)}
         />
         {/* Info panel: map overlay toggles, flight stats, and feasibility */}
         <div className="info-panel">
