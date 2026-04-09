@@ -77,7 +77,7 @@ class Cost:
         num_of_nodes = 4
 
         # dist_btw_nodes=5
-        dist_btw_nodes = 5
+        dist_btw_nodes = 20
 
         # dist_btw_layer=50
         dist_btw_layer = 50
