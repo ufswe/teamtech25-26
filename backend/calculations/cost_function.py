@@ -129,10 +129,10 @@ class Cost:
             
 
 
-        return [[Node(lat1, lon1, True, True)], 
-                node_network,
-                [Node(lat2, lon2, True, True)]
-                ]
+        return [[Node(lat1, lon1, True, True)],
+        node_network,
+        [Node(lat2, lon2, True, True)]
+        ]
 
 
     # helper functions 
@@ -283,7 +283,10 @@ class Cost:
         #Placeholder for now 
         distance =  self.get_distance(self.src.getLatitude(), self.src.getLongitude(), self.dest.getLatitude(), self.dest.getLongitude())
         time = self.time_of_flight(distance) # lower the better 
+<<<<<<< HEAD
         #&commented out for now
+=======
+>>>>>>> 321622556b5b76a90f582f6425f9c8a6ab7a8b79
         #collision_density = self.get_collision_density_score()
         carbon_emissions = self.get_carbon_emissions() # lower the better
 
@@ -300,15 +303,26 @@ class Cost:
 
 # # For testing------Ignore
 
+<<<<<<< HEAD
 # cost = Cost(Node(), Node())
+=======
+# cost = Cost(Node(self, latitude, longitude, airport, isOpen))
+# cost = Cost(Node(27.3, -82.55, True, False), Node(27.4, -82.386, True, False))
+# print(cost.get_total_cost())
+>>>>>>> 321622556b5b76a90f582f6425f9c8a6ab7a8b79
 
 # num_of_layers = (int) (cost.get_num_of_layers(27.3, -82.55, 33.75,-85.386))
 
 # node_network = cost.get_nodes_per_layer(
+<<<<<<< HEAD
 #     27.3, -82.55,
 #     33.75, -85.386,
 #     num_of_layers
 # )
+=======
+#    27.3, -82.55,
+#    33.75, -85.386, num_of_layers)
+>>>>>>> 321622556b5b76a90f582f6425f9c8a6ab7a8b79
 
 # # print(node_network)
 

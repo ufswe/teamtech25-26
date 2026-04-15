@@ -1,16 +1,19 @@
+/* ── Page Layout ── */
 .about-page {
   background-color: #dbeaf7;
   min-height: 100vh;
-  padding: 60px 40px;
+  padding: 60px 40px 0 40px;
+  display: flex;
+  flex-direction: column;
 }
 
+/* ── Top Cards ── */
 .about-cards {
   display: flex;
   gap: 30px;
   justify-content: center;
   max-width: 1200px;
-  margin: 0 auto;
-  margin-top: 60px;
+  margin: 60px auto 0;
 }
 
 .about-card {
@@ -45,19 +48,200 @@
   margin-bottom: 16px;
   font-size: 0.95rem;
 }
+
+/* ── Shared Section Styles ── */
+.about-section {
+  max-width: 1200px;
+  width: 100%;
+  margin: 40px auto 0;
+}
+
+.section-title {
+  color: #1a2e5a;
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #1a2e5a;
+  display: inline-block;
+}
+
+/* ── Sponsor Section ── */
+.sponsor-card {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  background-color: white;
+  border: 2px solid #1a2e5a;
+  border-radius: 12px;
+  padding: 30px;
+}
+
+.sponsor-logo {
+  width: 140px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.sponsor-info h3 {
+  color: #1a2e5a;
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.sponsor-info p {
+  color: #2c3e6b;
+  line-height: 1.7;
+  font-size: 0.95rem;
+}
+
+/* ── Leadership Section ── */
+.leadership-grid {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.leadership-card {
+  background-color: white;
+  border: 2px solid #1a2e5a;
+  border-radius: 12px;
+  padding: 24px 32px;
+  text-align: center;
+  min-width: 160px;
+}
+
+.leadership-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background-color: #1a2e5a;
+  color: white;
+  font-size: 1.3rem;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+
+.leadership-role {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #2c3e6b;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.leadership-name {
+  color: #1a2e5a;
+  font-weight: bold;
+  font-size: 0.95rem;
+}
+
+/* ── Subteams Section ── */
+.subteams-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.subteam-card {
+  background-color: white;
+  border: 2px solid #1a2e5a;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.subteam-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #dbeaf7;
+}
+
+.subteam-icon {
+  font-size: 1.3rem;
+}
+
+.subteam-header h3 {
+  color: #1a2e5a;
+  font-size: 1rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.subteam-members {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.subteam-members li {
+  color: #2c3e6b;
+  font-size: 0.9rem;
+  padding: 4px 0;
+  border-bottom: 1px solid #dbeaf7;
+}
+
+.subteam-members li:last-child {
+  border-bottom: none;
+}
+
+/* ── Footer ── */
 .about-footer {
   background-color: #1a2e5a;
   color: white;
   text-align: center;
   padding: 24px;
   font-weight: bold;
+  margin-top: 40px;
 }
-.about-page {
-  background-color: #dbeaf7;
-  height: calc(100vh - 60px); 
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 40px 40px 0 40px;
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .about-cards {
+    flex-direction: column;
+  }
+
+  .subteams-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .about-page {
+    padding: 40px 20px 0;
+  }
+
+  .sponsor-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .subteams-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Group Photo ── */
+.group-photo-wrapper {
+  border: 2px solid #1a2e5a;
+  border-radius: 12px;
   overflow: hidden;
+  width: 100%;
+}
+
+.group-photo {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
 }

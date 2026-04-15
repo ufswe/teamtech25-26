@@ -19,19 +19,9 @@ import FeasibilityBar from "../components/FeasibilityBar.jsx"; // horizontal bar
 import LoadingPage from "../pages/LoadingPage.jsx"
 import airportData from "../global-airports.json";
 import FlightDevice from "./device/FlightDevice";
+// import getAirportCoords from "../components/MapTilerRadarPreview.jsx";
 
 console.log("Flight component rendering");
-
-const getAirportCoords = (iata) => {
-  const airport = airportData.features.find(
-    (feature) => feature.properties.iata_code === iata
-  );
-  if (airport) {
-    const [lng, lat] = airport.geometry.coordinates;
-    return {lat, lng};
-  }
-  return null;
-};
 
 export default function Flight() {
 
@@ -56,6 +46,9 @@ export default function Flight() {
   // TODO: NEEDS TO BE FIXED TO BE DYNAMIC
   const [deptTimezone, setDeptTimezone] = useState("EST");
   const [arrivalTimezone, setArrivalTimezone] = useState("EST");
+
+  // 
+  
 
     const airports = useMemo(() => {
     return airportData.features
@@ -89,9 +82,6 @@ export default function Flight() {
 
   const [deptDate, setDeptDate] = useState(new Date());
   const [arrivalDate, setArrivalDate] = useState(new Date());
-  const [optimalPath, setOptimalPath] = useState([]);   
-  const [minCost, setMinCost] = useState(null);         
-  const [pathError, setPathError] = useState(null);   
 
   const formatDateTime = (dateValue, timeValue) => {
     if (!dateValue) return "";
@@ -109,46 +99,19 @@ export default function Flight() {
 
   const [isLoading, setIsLoading] = useState(false);
 
+  // const handleSubmit = async () => {
+  //   setIsLoading(true);
+  //   try{
+  //     await new Promise(resolve => setTimeout(resolve, 3000));
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // }
   const handleSubmit = async () => {
-    //Ensure both airports are selected
-    if(!deptAirport || !arrivalAirport) {
-      console.log("Make sure both airports are selected");
-      return;
-    }
-
-    //Look up their coordinates
-    const srcC = getAirportCoords(deptAirport);
-    const destC = getAirportCoords(arrivalAirport);
-    if(!srcC || !destC) {
-      console.log("Error with fetching src coords or dest coords");
-      return;
-    }
-
-    //Call Flask
     setIsLoading(true);
     try{
-      const response = await fetch("http://localhost:5001/api/optimal-path", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          src_lat: srcC.lat,
-          src_long: srcC.lng,
-          dest_lat: destC.lat,
-          dest_long: destC.lng,
-        }),
-      });
-
-      //Save the path
-      const data = await response.json();
-      setOptimalPath(data.optimal_path); // [[lat, lng], [lat, lng], [lat, lng], ...]
-    }
-    catch(error){
-      console.error("Failed to fetch optimal path:", error);
-      setPathError("Failed to calculate path");
-    }
-    finally{
+      await new Promise(resolve => setTimeout(resolve, 3000));
+    } finally {
       setIsLoading(false);
     }
   }
