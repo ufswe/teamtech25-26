@@ -235,9 +235,9 @@ class Cost:
     def get_collision_density_score(self, cell_degree: float=0.25) -> float:
         bins=self.get_air_traffic_density(cell_degree)
         area= math.pi*(self.radius**2)
-        density = sum(bins.values()) / area if area > 0 else 0
-        max_density = 0.002
-        collision_density_score=np.interp(np.clip(density, 0, max_density), [0, max_density], [0.0, 1.0])
+        density = sum(bins.values()) / area if area > 0 else 0.0
+        critical_density = 0.04
+        collision_density_score=min(1.0,(density/critical_density)**2)
         return float(collision_density_score)
 
 
