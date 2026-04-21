@@ -23,23 +23,13 @@ import FlightDevice from "./device/FlightDevice";
 
 console.log("Flight component rendering");
 
-const getAirportCoords = (iata) => {
-  const airport = airportData.features.find(
-    (feature) => feature.properties.iata_code === iata
-  );
-  if (airport) {
-    const [lng, lat] = airport.geometry.coordinates;
-    return {lat, lng};
-  }
-  return null;
-};
-
 export default function Flight() {
 
   const [searchParams] = useSearchParams();
 
   const [deptAirport, setDeptAirport] = useState();
   const [arrivalAirport, setArrivalAirport] = useState();
+  const [lat, setLat] = useState(null);
 
   const [deptTime, setDeptTime] = useState();
   const [arrivalTime, setArrivalTime] = useState();
@@ -92,9 +82,6 @@ export default function Flight() {
 
   const [deptDate, setDeptDate] = useState(new Date());
   const [arrivalDate, setArrivalDate] = useState(new Date());
-  const [minCost, setMinCost ] = useState(null);
-  const [pathError, setPathError ] = useState(null);
-  const [optimalPath, setOptimalPath]= useState(null);
 
   const formatDateTime = (dateValue, timeValue) => {
     if (!dateValue) return "";
@@ -121,48 +108,13 @@ export default function Flight() {
   //   }
   // }
   const handleSubmit = async () => {
-    //Ensure both airports are selected
-    if(!deptAirport || !arrivalAirport) {
-      console.log("Make sure both airports are selected");
-      return;
-    }
-
-    //Look up their coordinates
-    const srcC = getAirportCoords(deptAirport);
-    const destC = getAirportCoords(arrivalAirport);
-    if(!srcC || !destC) {
-      console.log("Error with fetching src coords or dest coords");
-      return;
-    }
-
-    //Call Flask
-    setIsLoading(true);
-    try{
-      const response = await fetch("http://localhost:5001/api/optimal-path", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          src_lat: srcC.lat,
-          src_long: srcC.lng,
-          dest_lat: destC.lat,
-          dest_long: destC.lng,
-        }),
-      });
-
-      //Save the path
-      const data = await response.json();
-      setOptimalPath(data.optimal_path); // [[lat, lng], [lat, lng], [lat, lng], ...]
-    }
-    catch(error){
-      console.error("Failed to fetch optimal path:", error);
-      setPathError("Failed to calculate path");
-    }
-    finally{
-      setIsLoading(false);
-    }
-  }
+    setIsLoading(true);
+    try{
+      await new Promise(resolve => setTimeout(resolve, 3000));
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   return (
     <div className="flight-page">
@@ -226,6 +178,7 @@ export default function Flight() {
               <p className="timezone-label">{deptTimezone}</p>
             </div>
           </div>
+    
         </div>
 
         <div className="priority-selection">

@@ -31,6 +31,7 @@ class Cost:
         self.aircraft_mass_landing = 66349 #kg
         self.g = 9.81 #m/s^2
         self.aircraft_weight = self.aircraft_mass_takeoff * self.aircraft_mass_landing * self.g *.5 #N
+        self.radius=50*.539957 #km to nautical miles, radius of area around each node to check for air traffic density
         
         # self.fuel_mass_flow = self.specific_fuel_consumption * self.aircraft_weight/self.LD #(kg/s)
 
@@ -81,6 +82,7 @@ class Cost:
 
         num_of_nodes = 4
 
+        # dist_btw_nodes=5
         dist_btw_nodes = 5
 
         dist_btw_layer = 50
@@ -204,22 +206,19 @@ class Cost:
     
     # Might use flight history for heatmap 
     # traffic
-    def fetch_aircraft_near_point(self, lat: float, lon:float, radius_nm: int=100, timeout_s: int=10) -> list:
+    def fetch_aircraft_near_point(self, lat: float, lon:float, timeout_s: int=10) -> list:
         if not (-90 <= lat <= 90 and -180 <= lon <= 180):
             raise ValueError("Invalid latitude or longitude")
-        if not (0 < radius_nm <= 250):
-            raise ValueError("Radius must be between 1 and 250 nautical miles")
-        
-        url= f"https://api.adsb.lol/v2/point/{lat}/{lon}/{radius_nm}"
+        url= f"https://api.adsb.lol/v2/point/{lat}/{lon}/{self.radius}"
         r= requests.get(url, timeout=timeout_s)
         r.raise_for_status()
         data = r.json()
         return data.get("ac", [])
     
-    def get_air_traffic_density(self, radius_nm: int=100, cell_degree: float=0.25) -> dict:
+    def get_air_traffic_density(self, cell_degree: float=0.25) -> dict:
         src_lat=self.src.getLatitude()
         src_lon=self.src.getLongitude()
-        aircraft_list = self.fetch_aircraft_near_point(src_lat, src_lon, radius_nm)
+        aircraft_list = self.fetch_aircraft_near_point(src_lat, src_lon)
         bins=defaultdict(int)
         for ac in aircraft_list:
             lat=ac.get("lat")
@@ -233,13 +232,12 @@ class Cost:
 
         return dict(bins)
         
-    def get_collision_density_score(self, radius_nm: int=100, cell_degree: float=0.25) -> float:
-        bins=self.get_air_traffic_density(radius_nm, cell_degree)
-        area= math.pi*(radius_nm**2)
-        density = sum(bins.values()) / area if area > 0 else 0
-        min_density = 0.00 #CHECK THIS
-        max_density = 0.002
-        collision_density_score=np.interp(np.clip(density, 0, max_density), [0, max_density], [0.0, 1.0])
+    def get_collision_density_score(self, cell_degree: float=0.25) -> float:
+        bins=self.get_air_traffic_density(cell_degree)
+        area= math.pi*(self.radius**2)
+        density = sum(bins.values()) / area if area > 0 else 0.0
+        critical_density = 0.04
+        collision_density_score=min(1.0,(density/critical_density)**2)
         return float(collision_density_score)
 
 
@@ -297,7 +295,7 @@ class Cost:
 
 
 
-# For testing------Ignore
+# # For testing------Ignore
 
 # cost = Cost(Node(self, latitude, longitude, airport, isOpen))
 # cost = Cost(Node(27.3, -82.55, True, False), Node(27.4, -82.386, True, False))
@@ -309,7 +307,7 @@ class Cost:
 #    27.3, -82.55,
 #    33.75, -85.386, num_of_layers)
 
-# print(node_network)
+# # print(node_network)
 
 
 

@@ -14,12 +14,19 @@ class Graph:
     def add_vertex(self, node, cost):
         pass
 
+    # #CURRENT - broken
+    # def initialize_layers(self, layers):
+    #     self._layers = layers[0]        # ← layers[0] is [src_node], so this sets _layers = a single Node list
+    #     for layer in layers[1]:         # ← this appends each inner layer correctly
+    #         self._layers.append(layer)
+    #     self._layers.append(layers[2])  # ← layers[2] is [dest_node], appends the whole list as one element
+
     def initialize_layers(self, layers):
         self._layers = []
         self._layers.append(layers[0])
         for layer in layers[1]:
             self._layers.append(layer)
-        self._layers.append(layers[2])
+        self._layers.append(layers[2])          # append [dest_node] as a layer
 
     def min_cost_path(self, start, end):
        path = []

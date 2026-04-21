@@ -19,6 +19,7 @@
     "react-leaflet": "^5.0.0",
     "react-leaflet-cluster": "^4.0.0",
     "react-router-dom": "^6.30.3",
+    "react-leaflet-fullscreen-plugin": "^1.0.1",
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },
