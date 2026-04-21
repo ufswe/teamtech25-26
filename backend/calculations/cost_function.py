@@ -5,6 +5,8 @@ import math
 import numpy as np
 from collections import defaultdict
 import requests
+from pathlib import Path
+from typing import Optional, Sequence, Any
 """
 To run, call this from teamtech25-26 root folder
 use: python -m backend.calculations.cost_function
@@ -42,6 +44,12 @@ class Cost:
         # self.time = #(hours)
         # self.visibility = #(miles)
         # self.altitude = #(feet)
+
+        # Single sklearn Pipeline saved from the notebook.
+        # Expected to be: (scaler -> KNN) so we can call `.predict(X)` or `.predict_proba(X)`.
+        self._weather_knn_pipeline: Any = None
+        self._models_dir = Path(__file__).resolve().parent / "models"
+        self._weather_knn_path = self._models_dir / "weather_knn.joblib"
 
     def get_num_of_layers(self, lat1, long1, lat2, long2):
 
@@ -241,7 +249,7 @@ class Cost:
         return float(collision_density_score)
 
 
-    def check_warning_status(self, wind, precipitation, lightning, time) -> bool:  
+    def check_warning_status(self, wind, precipitation, lightning, time, visibility: Optional[float] = None) -> bool:  
         # tornado warning
         if wind >= 34:
             Warning = True
@@ -261,12 +269,44 @@ class Cost:
         elif lightning >= 5 and wind >= 20:
             Warning = True
         #general warning 
-        elif visibility <= 3:
+        elif visibility is not None and visibility <= 3:
             Warning = True
         else:
             Warning = False
 
         return Warning
+
+    def _load_weather_knn(self):
+        # Loads in the knn pipeline saved from notebook 
+
+        if self._weather_knn_pipeline is not None:
+            return self._weather_knn_pipeline
+
+        if not self._weather_knn_path.is_file():
+            return None
+
+        try:
+            import joblib  # type: ignore
+        except Exception:
+            return None
+
+        self._weather_knn_pipeline = joblib.load(self._weather_knn_path)
+        return self._weather_knn_pipeline
+
+    def predict_weather_risk(self, features: Sequence[float]) -> float:
+        # returns either the probailtiy of safe/unsafe weather but if not, returns the predicted class. 
+        pipeline = self._load_weather_knn()
+        if pipeline is None:
+            return 0.0
+
+        X = np.asarray(features, dtype=float).reshape(1, -1)
+
+        if hasattr(pipeline, "predict_proba"):
+            proba = pipeline.predict_proba(X)
+            return float(proba[0][1])
+
+        pred = pipeline.predict(X)
+        return float(pred[0])
     
     def time_of_flight(self, distance):
 
@@ -277,19 +317,26 @@ class Cost:
         return time
 
     # returns overall cost 
-    def get_total_cost(self):
+
+    # Weather passed in from backend API fetch
+
+    def get_total_cost(self, weather_features: Optional[Sequence[float]] = None):
         #Placeholder for now 
         distance =  self.get_distance(self.src.getLatitude(), self.src.getLongitude(), self.dest.getLatitude(), self.dest.getLongitude())
         time = self.time_of_flight(distance) # lower the better 
         #collision_density = self.get_collision_density_score()
         carbon_emissions = self.get_carbon_emissions() # lower the better
 
+        prediction = 0.0
+        if weather_features is not None:
+            prediction = self.predict_weather_risk(weather_features) ## if using proba, will result in score 0-1, if not then will return only 0/1
+    
         w1 = 0.25
         w2 = 0.25 
         w3 = 0.35 
         w4 = 0.25 
 
-        return (w1 * distance + w2 * time + w4 * carbon_emissions)
+        return (w1 * distance + w2 * time + w3 * prediction + w4 * carbon_emissions)
 
 
 
