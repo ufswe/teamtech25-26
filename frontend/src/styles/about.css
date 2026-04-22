@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com');
+
+
 /* ── Page Layout ── */
 .about-page {
   background-color: #dbeaf7;
@@ -29,6 +32,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  font-family: 'Instrument Sans', sans-serif !important;
 }
 
 .card-header h2 {
@@ -38,7 +42,7 @@
 }
 
 .card-logo {
-  width: 70px;
+  width: 100px;
   height: auto;
 }
 
@@ -63,7 +67,9 @@
   margin-bottom: 16px;
   padding-bottom: 8px;
   border-bottom: 2px solid #1a2e5a;
-  display: inline-block;
+  display: block;
+  text-align: center;
+  font-family:'Instrument Sans', sans-serif !important;
 }
 
 /* ── Sponsor Section ── */
@@ -88,11 +94,13 @@
   font-size: 1.1rem;
   font-weight: bold;
   margin-bottom: 8px;
+  font-family: 'Instrument Sans', sans-serif !important;
 }
 
 .sponsor-info p {
   color: #2c3e6b;
   line-height: 1.7;
+  font-family: 'Instrument Sans', sans-serif !important;
   font-size: 0.95rem;
 }
 
@@ -124,6 +132,7 @@
   align-items: center;
   justify-content: center;
   margin: 0 auto 12px;
+  font-family: 'Instrument Sans', sans-serif !important;
 }
 
 .leadership-role {
@@ -133,12 +142,14 @@
   color: #2c3e6b;
   font-weight: 600;
   margin-bottom: 4px;
+  font-family: 'Instrument Sans', sans-serif !important;
 }
 
 .leadership-name {
   color: #1a2e5a;
   font-weight: bold;
   font-size: 0.95rem;
+  font-family: 'Instrument Sans', sans-serif !important;
 }
 
 /* ── Subteams Section ── */
@@ -158,6 +169,7 @@
 .subteam-header {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   margin-bottom: 16px;
   padding-bottom: 10px;
@@ -165,7 +177,7 @@
 }
 
 .subteam-icon {
-  font-size: 1.3rem;
+  font-size: 1.6rem;
 }
 
 .subteam-header h3 {
@@ -173,6 +185,8 @@
   font-size: 1rem;
   font-weight: bold;
   margin: 0;
+  text-align: center;
+  font-family: 'Instrument Sans', sans-serif !important;
 }
 
 .subteam-members {
@@ -189,6 +203,7 @@
   font-size: 0.9rem;
   padding: 4px 0;
   border-bottom: 1px solid #dbeaf7;
+  font-family: 'Instrument Sans', sans-serif !important;
 }
 
 .subteam-members li:last-child {
@@ -202,7 +217,9 @@
   text-align: center;
   padding: 24px;
   font-weight: bold;
-  margin-top: 40px;
+  margin: 40px -40px 0;
+  width: calc(100% + 80px);
+  font-family: 'Instrument Sans', sans-serif !important;
 }
 
 /* ── Responsive ── */
@@ -228,6 +245,11 @@
 
   .subteams-grid {
     grid-template-columns: 1fr;
+  }
+
+  .about-footer {
+    margin: 40px -20px 0;
+    width: calc(100% + 40px);
   }
 }
 

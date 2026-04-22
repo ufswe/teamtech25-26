@@ -12,6 +12,7 @@ export default function Home() {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
+        fontFamily: "'Instrument Sans', sans-serif",
       }}
     >
       <h1 style={{ color: "#c8d8f0", marginTop: "50px" }}>
@@ -19,6 +20,7 @@ export default function Home() {
       </h1>
 
       <Button
+        style = {{fontFamily: "'Instrument Sans', sans-serif"}}
         onClick={() => {
           console.log("clicked");
           navigate("/flight");

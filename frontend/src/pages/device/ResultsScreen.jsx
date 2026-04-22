@@ -1,7 +1,13 @@
 import MapTilerRadarPreview from "../../components/MapTilerRadarPreview.jsx";
 import FeasibilityBar from "../../components/FeasibilityBar.jsx";
 
-export default function ResultsScreen({ startDate, endDate, feasibilityValue, onNewFlight }) {
+export default function ResultsScreen({
+  pathPoints,
+  startDate,
+  endDate,
+  feasibilityValue,
+  onNewFlight
+}){
   return (
     <div style={styles.screen}>
       <div style={styles.mapWrap}>
@@ -9,6 +15,7 @@ export default function ResultsScreen({ startDate, endDate, feasibilityValue, on
           weatherRadarVisible={true}
           startDate={startDate}
           endDate={endDate}
+          pathPoints={pathPoints}
         />
       </div>
       <div style={styles.bottomBar}>

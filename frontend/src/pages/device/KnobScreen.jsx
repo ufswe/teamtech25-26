@@ -1,6 +1,23 @@
 import Knob from "../../components/Knob.jsx";
+import { useEffect, useRef } from "react";
 
 export default function KnobScreen({ label, value, onChange, onNext, onBack }) {
+  
+  const knobContainerRef = useRef(null);
+
+  useEffect(() => {
+    // Auto-focus knob when screen loads
+    if (knobContainerRef.current) {
+      const focusable = knobContainerRef.current.querySelector(
+        "input, button, [tabindex]"
+      );
+
+      if (focusable) {
+        focusable.focus();
+      }
+    }
+  }, []);
+  
   return (
     <div style={styles.screen}>
       <h2 style={styles.heading}>{label}</h2>
