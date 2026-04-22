@@ -1,5 +1,13 @@
+#design 
+import eventlet
+eventlet.monkey_patch()
+
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+
+#design
+from flask_socketio import SocketIO
 
 import openmeteo_requests
 import pandas as pd
@@ -9,8 +17,14 @@ from calculations.cost_function import Cost
 from data_structures.graph import Graph
 from data_structures.node import Node
 
+#design
+import gpio_handler
+
 app = Flask(__name__)
 CORS(app)
+
+#DESIGN
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 
 @app.route('/api/optimal-path', methods=['POST'])
 @app.route('/api/optimal-path', methods=['POST'])
@@ -83,4 +97,17 @@ def testing2():
     return jsonify({"deptAirport": deptAirport, "arrivalAirport": arrivalAirport})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    #app.run(host='0.0.0.0', port=5001, debug=True)
+    # DESIGN CHANGE :
+    try:
+        print("[System] Initializing Hardware Callbacks...")
+        gpio_handler.register_callbacks(socketio)
+        
+        print("[System] Starting Server on http://0.0.0.0:5001")
+        socketio.run(app, host='0.0.0.0', port=5001, debug=False)
+        
+    except KeyboardInterrupt:
+        print("[System] Shutting down...")
+    finally:
+        import RPi.GPIO as GPIO
+        GPIO.cleanup()
