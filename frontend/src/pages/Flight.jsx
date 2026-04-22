@@ -19,6 +19,7 @@ import FeasibilityBar from "../components/FeasibilityBar.jsx"; // horizontal bar
 import LoadingPage from "../pages/LoadingPage.jsx"
 import airportData from "../global-airports.json";
 import FlightDevice from "./device/FlightDevice";
+import KnobScreen from './device/KnobScreen.jsx';
 // import getAirportCoords from "../components/MapTilerRadarPreview.jsx";
 
 console.log("Flight component rendering");
@@ -60,6 +61,7 @@ export default function Flight() {
     const [carbonValue, setCarbonValue] = useState(0);
     const [weatherValue, setWeatherValue] = useState(0);
     const [travelValue, setTravelValue] = useState(0);
+    const [airTrafficValue, setAirTrafficValue] = useState(0);
 
     // Toggle states for map overlay layers (default both on)
     const [weatherView, setWeatherView] = useState(() => (
@@ -318,6 +320,7 @@ export default function Flight() {
               <Knob label="Carbon Emissions" value={carbonValue} onChange={setCarbonValue} />
               <Knob label="Weather Safety" value={weatherValue} onChange={setWeatherValue} />
               <Knob label="Travel Time" value={travelValue} onChange={setTravelValue} />
+              <Knob label="Air Traffic" value={airTrafficValue} onChange={setAirTrafficValue} />
             </div>
             <div className="priority-buttons">
               <Button
