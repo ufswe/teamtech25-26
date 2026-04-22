@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.css": "/static/css/main.61aff38f.css",
+    "main.js": "/static/js/main.5ebd6101.js",
+    "static/media/globe4.png": "/static/media/globe4.b1f8c31a0259e72fe0c3.png",
+    "static/media/globe3.png": "/static/media/globe3.5d5d9f4649e2e11c944f.png",
+    "static/media/globe1.png": "/static/media/globe1.e792dbfc83e604f72485.png",
+    "static/media/globe2.png": "/static/media/globe2.d3a195a34394c8c07572.png",
+    "index.html": "/index.html",
+    "main.61aff38f.css.map": "/static/css/main.61aff38f.css.map",
+    "main.5ebd6101.js.map": "/static/js/main.5ebd6101.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.61aff38f.css",
+    "static/js/main.5ebd6101.js"
+  ]
+}
