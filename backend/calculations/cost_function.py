@@ -5,6 +5,8 @@ import math
 import numpy as np
 from collections import defaultdict
 import requests
+from pathlib import Path
+from typing import Optional, Sequence, Any
 """
 To run, call this from teamtech25-26 root folder
 use: python -m backend.calculations.cost_function
@@ -31,6 +33,7 @@ class Cost:
         self.aircraft_mass_landing = 66349 #kg
         self.g = 9.81 #m/s^2
         self.aircraft_weight = self.aircraft_mass_takeoff * self.aircraft_mass_landing * self.g *.5 #N
+        self.radius=50*.539957 #km to nautical miles, radius of area around each node to check for air traffic density
         
         # self.fuel_mass_flow = self.specific_fuel_consumption * self.aircraft_weight/self.LD #(kg/s)
 
@@ -41,6 +44,12 @@ class Cost:
         # self.time = #(hours)
         # self.visibility = #(miles)
         # self.altitude = #(feet)
+
+        # Single sklearn Pipeline saved from the notebook.
+        # Expected to be: (scaler -> KNN) so we can call `.predict(X)` or `.predict_proba(X)`.
+        self._weather_knn_pipeline: Any = None
+        self._models_dir = Path(__file__).resolve().parent / "models"
+        self._weather_knn_path = self._models_dir / "weather_knn.joblib"
 
     def get_num_of_layers(self, lat1, long1, lat2, long2):
 
@@ -81,6 +90,7 @@ class Cost:
 
         num_of_nodes = 4
 
+        # dist_btw_nodes=5
         dist_btw_nodes = 5
 
         dist_btw_layer = 50
@@ -129,11 +139,10 @@ class Cost:
             
 
 
-        return {
-                "source": (lat1, lon1),
-                "layers": np.array(node_network),
-                "destination": (lat2, lon2)
-                }
+        return [[Node(lat1, lon1, True, True)],
+        node_network,
+        [Node(lat2, lon2, True, True)]
+        ]
 
 
     # helper functions 
@@ -205,22 +214,19 @@ class Cost:
     
     # Might use flight history for heatmap 
     # traffic
-    def fetch_aircraft_near_point(self, lat: float, lon:float, radius_nm: int=100, timeout_s: int=10) -> list:
+    def fetch_aircraft_near_point(self, lat: float, lon:float, timeout_s: int=10) -> list:
         if not (-90 <= lat <= 90 and -180 <= lon <= 180):
             raise ValueError("Invalid latitude or longitude")
-        if not (0 < radius_nm <= 250):
-            raise ValueError("Radius must be between 1 and 250 nautical miles")
-        
-        url= f"https://api.adsb.lol/v2/point/{lat}/{lon}/{radius_nm}"
+        url= f"https://api.adsb.lol/v2/point/{lat}/{lon}/{self.radius}"
         r= requests.get(url, timeout=timeout_s)
         r.raise_for_status()
         data = r.json()
         return data.get("ac", [])
     
-    def get_air_traffic_density(self, radius_nm: int=100, cell_degree: float=0.25) -> dict:
+    def get_air_traffic_density(self, cell_degree: float=0.25) -> dict:
         src_lat=self.src.getLatitude()
         src_lon=self.src.getLongitude()
-        aircraft_list = self.fetch_aircraft_near_point(src_lat, src_lon, radius_nm)
+        aircraft_list = self.fetch_aircraft_near_point(src_lat, src_lon)
         bins=defaultdict(int)
         for ac in aircraft_list:
             lat=ac.get("lat")
@@ -234,17 +240,16 @@ class Cost:
 
         return dict(bins)
         
-    def get_collision_density_score(self, radius_nm: int=100, cell_degree: float=0.25) -> float:
-        bins=self.get_air_traffic_density(radius_nm, cell_degree)
-        area= math.pi*(radius_nm**2)
-        density = sum(bins.values()) / area if area > 0 else 0
-        min_density = 0.00 #CHECK THIS
-        max_density = 0.002
-        collision_density_score=np.interp(np.clip(density, 0, max_density), [0, max_density], [0.0, 1.0])
+    def get_collision_density_score(self, cell_degree: float=0.25) -> float:
+        bins=self.get_air_traffic_density(cell_degree)
+        area= math.pi*(self.radius**2)
+        density = sum(bins.values()) / area if area > 0 else 0.0
+        critical_density = 0.04
+        collision_density_score=min(1.0,(density/critical_density)**2)
         return float(collision_density_score)
 
 
-    def check_warning_status(self, wind, precipitation, lightning, time) -> bool:  
+    def check_warning_status(self, wind, precipitation, lightning, time, visibility: Optional[float] = None) -> bool:  
         # tornado warning
         if wind >= 34:
             Warning = True
@@ -264,12 +269,44 @@ class Cost:
         elif lightning >= 5 and wind >= 20:
             Warning = True
         #general warning 
-        elif visibility <= 3:
+        elif visibility is not None and visibility <= 3:
             Warning = True
         else:
             Warning = False
 
         return Warning
+
+    def _load_weather_knn(self):
+        # Loads in the knn pipeline saved from notebook 
+
+        if self._weather_knn_pipeline is not None:
+            return self._weather_knn_pipeline
+
+        if not self._weather_knn_path.is_file():
+            return None
+
+        try:
+            import joblib  # type: ignore
+        except Exception:
+            return None
+
+        self._weather_knn_pipeline = joblib.load(self._weather_knn_path)
+        return self._weather_knn_pipeline
+
+    def predict_weather_risk(self, features: Sequence[float]) -> float:
+        # returns either the probailtiy of safe/unsafe weather but if not, returns the predicted class. 
+        pipeline = self._load_weather_knn()
+        if pipeline is None:
+            return 0.0
+
+        X = np.asarray(features, dtype=float).reshape(1, -1)
+
+        if hasattr(pipeline, "predict_proba"):
+            proba = pipeline.predict_proba(X)
+            return float(proba[0][1])
+
+        pred = pipeline.predict(X)
+        return float(pred[0])
     
     def time_of_flight(self, distance):
 
@@ -280,19 +317,26 @@ class Cost:
         return time
 
     # returns overall cost 
-    def get_total_cost(self):
+
+    # Weather passed in from backend API fetch
+
+    def get_total_cost(self, weather_features: Optional[Sequence[float]] = None):
         #Placeholder for now 
         distance =  self.get_distance(self.src.getLatitude(), self.src.getLongitude(), self.dest.getLatitude(), self.dest.getLongitude())
         time = self.time_of_flight(distance) # lower the better 
-        collision_density = self.get_collision_density_score()
+        #collision_density = self.get_collision_density_score()
         carbon_emissions = self.get_carbon_emissions() # lower the better
 
+        prediction = 0.0
+        if weather_features is not None:
+            prediction = self.predict_weather_risk(weather_features) ## if using proba, will result in score 0-1, if not then will return only 0/1
+    
         w1 = 0.25
         w2 = 0.25 
         w3 = 0.35 
         w4 = 0.25 
 
-        return (w1 * distance + w2 * time + w3 * collision_density + w4 * carbon_emissions)
+        return (w1 * distance + w2 * time + w3 * prediction + w4 * carbon_emissions)
 
 
 
@@ -301,8 +345,8 @@ class Cost:
 # For testing------Ignore
 
 # cost = Cost(Node(self, latitude, longitude, airport, isOpen))
-cost = Cost(Node(27.3, -82.55, True, False), Node(27.4, -82.386, True, False))
-print(cost.get_total_cost())
+# cost = Cost(Node(27.3, -82.55, True, False), Node(27.4, -82.386, True, False))
+# print(cost.get_total_cost())
 
 # num_of_layers = (int) (cost.get_num_of_layers(27.3, -82.55, 33.75,-85.386))
 

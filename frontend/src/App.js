@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import Flight from "./pages/Flight";
 import About from "./pages/About";
 import Navbar from "./components/layout/Navbar";
@@ -12,6 +12,7 @@ function App() {
     <BrowserRouter>
       <Navbar />
       <Routes>
+        <Route path="/" element={<Navigate to="/home" />} />
         <Route path="/home" element={<Home />} />
         <Route path="/flight" element={<Flight />} />
         <Route path="/about" element={<About />} />
