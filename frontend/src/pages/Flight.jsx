@@ -16,7 +16,6 @@ import Input from "../components/Input.jsx";
 import Knob from "../components/Knob.jsx";
 import ToggleSwitch from "../components/ToggleSwitch.jsx"; // toggle for map overlay views
 import FeasibilityBar from "../components/FeasibilityBar.jsx"; // horizontal bar showing flight feasibility
-import LoadingPage from "../pages/LoadingPage.jsx"
 import airportData from "../global-airports.json";
 import FlightDevice from "./device/FlightDevice";
 import KnobScreen from './device/KnobScreen.jsx';
@@ -246,7 +245,6 @@ export default function Flight() {
 
     return (
       <div className="flight-page">
-        <LoadingPage isLoading={isLoading}/>
         <div className="control-panel">
           <div className="flight-info">
             <div className="source">
