@@ -6,14 +6,39 @@ import ArrivalTimeScreen from './ArrivalTimeScreen';
 import KnobScreen from './KnobScreen';
 import ConfirmScreen from './ConfirmScreen';
 import ResultsScreen from './ResultsScreen';
+import airportData from "../../global-airports.json";
+import MapTilerRadarPreview from "../../components/MapTilerRadarPreview.jsx";
 
-const airports = [
-  { value: "airport 1", label: "AP1 - airport 1" },
-  { value: "airport 2", label: "AP2 - airport 2" },
-  { value: "airport 3", label: "AP3 - airport 3" }
-];
+const getAirportCoords = (iata) => {
+  const airport = airportData.features.find(
+    (feature) => feature.properties.iata_code === iata
+  );
+  if (airport) {
+    const [lng, lat] = airport.geometry.coordinates;
+    return {lat, lng};
+  }
+  return null;
+};
 
-const SCREENS = ['dept', 'time', 'arrival', 'arrivalTime', 'carbon', 'weather', 'travel', 'confirm', 'results'];
+const airports = airportData.features
+  .map((feature) => {
+    const props = feature?.properties || {};
+    const iata = props.iata_code;
+
+    if (!iata) return null;
+
+    const name = props.name || "Unknown Airport";
+    const city = props.municipality ? ` (${props.municipality})` : "";
+
+    return {
+      value: iata,
+      label: `${iata} - ${name}${city}`,
+    };
+  })
+  .filter(Boolean)
+  .sort((a, b) => a.label.localeCompare(b.label));
+
+const SCREENS = ['dept', 'time', 'arrival', 'arrivalTime', 'carbon', 'weather', 'travel', 'airTraffic', 'confirm', 'results'];
 
 export default function FlightDevice() {
   const [currentScreen, setCurrentScreen] = useState('dept');
@@ -24,6 +49,9 @@ export default function FlightDevice() {
   const [carbonValue, setCarbonValue] = useState(0);
   const [weatherValue, setWeatherValue] = useState(0);
   const [travelValue, setTravelValue] = useState(0);
+  const [airTrafficValue, setAirTrafficValue] = useState(0);
+  const [optimalPath, setOptimalPath] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const timezone = new Date()
     .toLocaleTimeString('en-US', { timeZoneName: 'short' })
@@ -50,8 +78,39 @@ export default function FlightDevice() {
     return `${month}/${day}/${year} ${hours}:${minutes}`;
   }
 
-  function handleEnter() {
-    setCurrentScreen('results');
+  async function handleEnter() {
+    if (!deptAirport || !arrivalAirport) return;
+
+    const srcC = getAirportCoords(deptAirport);
+    const destC = getAirportCoords(arrivalAirport);
+
+    if (!srcC || !destC) return;
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:5001/api/optimal-path", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          src_lat: srcC.lat,
+          src_long: srcC.lng,
+          dest_lat: destC.lat,
+          dest_long: destC.lng
+        })
+      });
+
+      const data = await response.json();
+
+      setOptimalPath(data.optimal_path);
+      setCurrentScreen("results");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -118,6 +177,15 @@ export default function FlightDevice() {
           onBack={goBack}
         />
       )}
+      {currentScreen === 'airTraffic' && (
+        <KnobScreen
+          label="Air Traffic"
+          value={airTrafficValue}
+          onChange={setAirTrafficValue}
+          onNext={goNext}
+          onBack={goBack}
+        />
+      )}
       {currentScreen === 'confirm' && (
         <ConfirmScreen
           deptAirport={deptAirport}
@@ -134,6 +202,7 @@ export default function FlightDevice() {
       )}
       {currentScreen === 'results' && (
         <ResultsScreen
+          pathPoints={optimalPath}
           startDate={formatDateTime(deptTime)}
           endDate={formatDateTime(arrivalTime || deptTime)}
           feasibilityValue={15}
