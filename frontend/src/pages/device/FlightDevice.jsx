@@ -38,7 +38,7 @@ const airports = airportData.features
   .filter(Boolean)
   .sort((a, b) => a.label.localeCompare(b.label));
 
-const SCREENS = ['dept', 'time', 'arrival', 'arrivalTime', 'carbon', 'weather', 'travel', 'confirm', 'results'];
+const SCREENS = ['dept', 'time', 'arrival', 'arrivalTime', 'carbon', 'weather', 'travel', 'airTraffic', 'confirm', 'results'];
 
 export default function FlightDevice() {
   const [currentScreen, setCurrentScreen] = useState('dept');
@@ -49,6 +49,7 @@ export default function FlightDevice() {
   const [carbonValue, setCarbonValue] = useState(0);
   const [weatherValue, setWeatherValue] = useState(0);
   const [travelValue, setTravelValue] = useState(0);
+  const [airTrafficValue, setAirTrafficValue] = useState(0);
   const [optimalPath, setOptimalPath] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -172,6 +173,15 @@ export default function FlightDevice() {
           label="Travel Time"
           value={travelValue}
           onChange={setTravelValue}
+          onNext={goNext}
+          onBack={goBack}
+        />
+      )}
+      {currentScreen === 'airTraffic' && (
+        <KnobScreen
+          label="Air Traffic"
+          value={airTrafficValue}
+          onChange={setAirTrafficValue}
           onNext={goNext}
           onBack={goBack}
         />
