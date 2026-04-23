@@ -9,6 +9,8 @@ from calculations.cost_function import Cost
 from data_structures.graph import Graph
 from data_structures.node import Node
 app = Flask(__name__)
+app.json.sort_keys = False
+
 CORS(app)
 @app.route('/api/optimal-path', methods=['POST'])
 def get_optimal_path():
@@ -32,16 +34,16 @@ def get_optimal_path():
     graph_obj.initialize_layers(nodes_per_layer)
     print("layers:", graph_obj._layers)
     graph_obj.build_adjacency_list()
-    min_cost, path = graph_obj.min_cost_path(src, dest) #optimal path
+    min_cost, path = graph_obj.min_cost_path(src, dest, get_weather()) #optimal path
     cleaned_path = graph_obj.location(path) #cleaned path to return to frontend
     print("cleaned_path:", cleaned_path)
     return jsonify({"optimal_path": cleaned_path, "min_cost": min_cost}), 200 #placeholder
 @app.route('/api/optimal-path2', methods=['GET'])
-def get_weather():
+def get_weather(): #Pass in the lat and long of the dest node 
     #place holders for now
-    # data = request.json
-    # lat = data.get("lat")
-    # long = data.get("long")
+    data = request.json
+    lat = data.get("lat")
+    long = data.get("long")
     FORECAST_DAYS = 7 #example value
     HIGH_WIND_THRESHOLD_KN = 20  #example value
     # cache_session = requests_cache.CachedSession('.cache', expire_after=3600)
@@ -50,8 +52,8 @@ def get_weather():
     # ---- API CALL ----
     url = "https://api.open-meteo.com/v1/forecast"
     params = {
-        "latitude": 29,
-        "longitude": 137,
+        "latitude": lat,
+        "longitude": long,
         "daily": [
             "temperature_2m_max",
             "temperature_2m_min",
@@ -116,9 +118,9 @@ def get_weather():
     df["has_precipitation"]  = df["precip_inches"] > 0
     df["high_wind"]          = df["wind_max_kn"] > HIGH_WIND_THRESHOLD_KN
     df["icing_risk"]         = df["icing_risk_hours"] > 0        # True if ANY icing hour
+    df["date"] = df["date"].apply(lambda t: int(t.split("-")[1]))
     # ---- FINAL CLEAN OUTPUT ----
     ml_features = df[[
-        "date",
         "temp_max_f",
         "temp_min_f",
         "temp_range_f",
@@ -133,7 +135,8 @@ def get_weather():
         "has_snow",
         "has_precipitation",
         "high_wind",
-    ]]
+        "date",
+        ]]
     return jsonify(ml_features.to_dict(orient='records')), 200
 @app.route('/testing2', methods=['POST'])
 def testing2():

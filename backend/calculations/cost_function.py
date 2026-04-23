@@ -320,8 +320,15 @@ class Cost:
 
     # Weather passed in from backend API fetch
 
-    def get_total_cost(self, weather_features: Optional[Sequence[float]] = None):
+    def get_total_cost(self):
         #Placeholder for now 
+
+        #Weather features get from app.py here 
+
+        # RESPONSE - pass in self.dest.latitude etc.. ,, put this response into weather_features, in list
+
+        #weather_features = [] //list of floats, in same order as from response
+
         distance =  self.get_distance(self.src.getLatitude(), self.src.getLongitude(), self.dest.getLatitude(), self.dest.getLongitude())
         time = self.time_of_flight(distance) # lower the better 
         #collision_density = self.get_collision_density_score()
