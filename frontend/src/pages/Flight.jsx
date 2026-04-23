@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import "../components/Map.css";
 import "../styles/flight.css";
 import { DayPicker } from 'react-day-picker';
-import { format } from 'date-fns';
+import { format, set } from 'date-fns';
 import "react-day-picker/dist/style.css";
 import "../components/Map.css";
 import "../styles/flight.css";
@@ -328,6 +328,7 @@ export default function Flight() {
                   setCarbonValue(0);
                   setWeatherValue(0);
                   setTravelValue(0);
+                  setAirTrafficValue(0);
                 }}
               >
                 Clear

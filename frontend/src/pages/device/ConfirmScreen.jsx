@@ -2,7 +2,7 @@ export default function ConfirmScreen({
   deptAirport, arrivalAirport,
   deptTime, arrivalTime,
   timezone,
-  carbonValue, weatherValue, travelValue,
+  carbonValue, weatherValue, travelValue, airTrafficValue,
   onBack, onEnter
 }) {
   return (
@@ -26,9 +26,9 @@ export default function ConfirmScreen({
           <span style={styles.rowValue}>{arrivalTime || "—"} {arrivalTime ? timezone : ""}</span>
         </div>
         <div style={styles.row}>
-          <span style={styles.rowLabel}>Carbon / Weather / Travel</span>
-          <span style={styles.rowValue}>{carbonValue} / {weatherValue} / {travelValue}</span>
-        </div>
+          <span style={styles.rowLabel}>Carbon / Weather / Travel / Air Traffic</span>
+          <span style={styles.rowValue}>{carbonValue} / {weatherValue} / {travelValue} / {airTrafficValue} </span>
+        </div> 
       </div>
       <div style={styles.navRow}>
         <button style={styles.navBtnBack} onClick={onBack}>← Back</button>

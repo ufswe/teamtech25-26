@@ -196,6 +196,7 @@ export default function FlightDevice() {
           carbonValue={carbonValue}
           weatherValue={weatherValue}
           travelValue={travelValue}
+          airTrafficValue={airTrafficValue}
           onBack={goBack}
           onEnter={handleEnter}
         />

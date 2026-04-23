@@ -66,7 +66,7 @@ export default function MapTilerRadarPreview({
   const [radarRange, setRadarRange] = useState({ start: 0, end: 0 });
   const [radarReady, setRadarReady] = useState(false);
   const [mapReady, setMapReady] = useState(false);
-  const [radarPlaying, setRadarPlaying] = useState(true);
+  const [radarPlaying, setRadarPlaying] = useState(weatherRadarVisible);
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [wasPlayingBeforeScrub, setWasPlayingBeforeScrub] = useState(false);
   const playAnchorRef = useRef({ time: 0, realMs: 0 });
@@ -103,7 +103,7 @@ export default function MapTilerRadarPreview({
     setRadarRange({ start: 0, end: 0 });
     setRadarReady(false);
 
-    const radarLayer = new RadarLayer({ opacity: 0.85 });
+    const radarLayer = new RadarLayer({ opacity: weatherRadarVisible ? 0.85 : 0 });
     radarLayerRef.current = radarLayer;
     const handleSourceReady = () => {
       const { startDate: liveStart, endDate: liveEnd } = datesRef.current || {};
