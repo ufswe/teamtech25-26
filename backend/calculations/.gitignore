@@ -3,3 +3,4 @@ __pycache__/
 ml_ready_dataset.csv
 *.csv
 balanced_ml_ready_dataset.csv
+models/
