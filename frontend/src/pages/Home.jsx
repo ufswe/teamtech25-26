@@ -26,7 +26,7 @@ export default function Home() {
           navigate("/flight");
         }}
       >
-        Enter
+        Plan Flight
       </Button>
 
       <img

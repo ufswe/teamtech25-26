@@ -7,14 +7,32 @@ import ArrivalTimeScreen from './ArrivalTimeScreen';
 import KnobScreen from './KnobScreen';
 import ConfirmScreen from './ConfirmScreen';
 import ResultsScreen from './ResultsScreen';
+import airportData from "../../global-airports.json";
 
-const airports = [
-  { value: "airport 1", label: "AP1 - airport 1" },
-  { value: "airport 2", label: "AP2 - airport 2" },
-  { value: "airport 3", label: "AP3 - airport 3" }
-];
+const getAirportCoords = (iata) => {
+  const airport = airportData.features.find(
+    (feature) => feature.properties.iata_code === iata
+  );
+  if (airport) {
+    const [lng, lat] = airport.geometry.coordinates;
+    return { lat, lng };
+  }
+  return null;
+};
 
-const SCREENS = ['dept', 'time', 'arrival', 'arrivalTime', 'carbon', 'weather', 'travel', 'confirm', 'results'];
+const airports = airportData.features
+  .map((feature) => {
+    const props = feature?.properties || {};
+    const iata = props.iata_code;
+    if (!iata) return null;
+    const name = props.name || "Unknown Airport";
+    const city = props.municipality ? ` (${props.municipality})` : "";
+    return { value: iata, label: `${iata} - ${name}${city}` };
+  })
+  .filter(Boolean)
+  .sort((a, b) => a.label.localeCompare(b.label));
+
+const SCREENS = ['dept', 'time', 'arrival', 'arrivalTime', 'carbon', 'weather', 'travel', 'airTraffic', 'confirm', 'results'];
 
 const getCurrentTime = () => {
   const now = new Date();
@@ -27,37 +45,77 @@ const getCurrentTime = () => {
 
 const formatTime = (t) => `${t.hour}:${String(t.minute).padStart(2, '0')} ${t.period}`;
 
-// ── Socket created ONCE outside component so it never resets ──
+const formatDateTime = (timeValue) => {
+  const today = new Date();
+  const timeString = timeValue || "00:00";
+  const [hours, minutes] = timeString.split(":");
+  const month  = String(today.getMonth() + 1).padStart(2, "0");
+  const day    = String(today.getDate()).padStart(2, "0");
+  const year   = today.getFullYear();
+  return `${month}/${day}/${year} ${hours}:${minutes}`;
+};
+
+// ── Socket created ONCE outside component ─────────────────────
 const socket = io('http://localhost:5001', { transports: ['websocket'] });
 
 export default function FlightDevice() {
-  const [currentScreen, setCurrentScreen]     = useState('dept');
-  const [deptAirport, setDeptAirport]         = useState('');
-  const [arrivalAirport, setArrivalAirport]   = useState('');
-  const [deptTime, setDeptTime]               = useState(formatTime(getCurrentTime()));
-  const [arrivalTime, setArrivalTime]         = useState(formatTime(getCurrentTime()));
-  const [carbonValue, setCarbonValue]         = useState(0);
-  const [weatherValue, setWeatherValue]       = useState(0);
-  const [travelValue, setTravelValue]         = useState(0);
-  const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const [timeState, setTimeState]             = useState({ ...getCurrentTime(), stage: 'hour' });
+  const [currentScreen, setCurrentScreen]       = useState('dept');
+  const [deptAirport, setDeptAirport]           = useState('');
+  const [arrivalAirport, setArrivalAirport]     = useState('');
+  const [deptTime, setDeptTime]                 = useState(formatTime(getCurrentTime()));
+  const [arrivalTime, setArrivalTime]           = useState(formatTime(getCurrentTime()));
+  const [carbonValue, setCarbonValue]           = useState(0);
+  const [weatherValue, setWeatherValue]         = useState(0);
+  const [travelValue, setTravelValue]           = useState(0);
+  const [airTrafficValue, setAirTrafficValue]   = useState(0);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [timeState, setTimeState]               = useState({ ...getCurrentTime(), stage: 'hour' });
+  const [optimalPath, setOptimalPath]           = useState(null);
+  const [isLoading, setIsLoading]               = useState(false);
 
-  // ── Refs so event handler always sees latest values ───────
-  // (avoids stale closure problem inside socket.on)
-  const screenRef       = useRef(currentScreen);
-  const timeStateRef    = useRef(timeState);
-  const lastUpdateRef   = useRef(0);  // debounce timestamp
+  const screenRef     = useRef(currentScreen);
+  const lastUpdateRef = useRef(0);
 
   useEffect(() => { screenRef.current = currentScreen; }, [currentScreen]);
-  useEffect(() => { timeStateRef.current = timeState; }, [timeState]);
 
+  // ── API call on confirm ────────────────────────────────────
+  async function handleEnter() {
+    if (!deptAirport || !arrivalAirport) return;
+    const srcC  = getAirportCoords(deptAirport);
+    const destC = getAirportCoords(arrivalAirport);
+    if (!srcC || !destC) return;
+    setIsLoading(true);
+    try {
+      const response = await fetch("http://localhost:5001/api/optimal-path", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          src_lat:   srcC.lat,
+          src_long:  srcC.lng,
+          dest_lat:  destC.lat,
+          dest_long: destC.lng
+        })
+      });
+      const data = await response.json();
+      setOptimalPath(data.optimal_path);
+      setCurrentScreen("results");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  // ── Hardware socket ────────────────────────────────────────
   useEffect(() => {
-    socket.on('connect', () => console.log('[Hardware] Socket connected ✓'));
+    socket.on('connect',    () => console.log('[Hardware] Socket connected ✓'));
     socket.on('disconnect', () => console.log('[Hardware] Socket disconnected'));
 
     socket.on('hardware_event', (data) => {
       const screen = screenRef.current;
       console.log('[Hardware]', data);
+
+      // Power button
       if (data.type === 'power' && data.value === 'off') {
         document.body.style.background = '#000';
         document.getElementById('root').style.display = 'none';
@@ -69,7 +127,7 @@ export default function FlightDevice() {
         return;
       }
 
-      // ── Encoder push: cycle hour → minute → period ────────
+      // Encoder push — cycle time stage
       if (data.type === 'encoder_press') {
         setTimeState(prev => {
           const stages = ['hour', 'minute', 'period'];
@@ -79,41 +137,44 @@ export default function FlightDevice() {
         return;
       }
 
-      // ── Enter: go to next screen ──────────────────────────
+      // Enter button — next screen (confirm triggers API)
       if (data.type === 'button_enter') {
+        if (screen === 'confirm') {
+          handleEnter();
+          return;
+        }
         setCurrentScreen(prev => {
           const idx = SCREENS.indexOf(prev);
           return idx < SCREENS.length - 1 ? SCREENS[idx + 1] : prev;
         });
-        setHighlightedIndex(0);
+        setHighlightedIndex(-1);
         setTimeState({ ...getCurrentTime(), stage: 'hour' });
         return;
       }
 
-      // ── Clear: reset current screen value ─────────────────
+      // Clear button
       if (data.type === 'button_clear') {
-        if (screen === 'dept')        setDeptAirport('');
-        if (screen === 'arrival')     setArrivalAirport('');
-        if (screen === 'time')        setDeptTime(formatTime(getCurrentTime()));
-        if (screen === 'arrivalTime') setArrivalTime(formatTime(getCurrentTime()));
-        if (screen === 'carbon')      setCarbonValue(0);
-        if (screen === 'weather')     setWeatherValue(0);
-        if (screen === 'travel')      setTravelValue(0);
-        setHighlightedIndex(0);
+        if (screen === 'dept')         setDeptAirport('');
+        if (screen === 'arrival')      setArrivalAirport('');
+        if (screen === 'time')         setDeptTime(formatTime(getCurrentTime()));
+        if (screen === 'arrivalTime')  setArrivalTime(formatTime(getCurrentTime()));
+        if (screen === 'carbon')       setCarbonValue(0);
+        if (screen === 'weather')      setWeatherValue(0);
+        if (screen === 'travel')       setTravelValue(0);
+        if (screen === 'airTraffic')   setAirTrafficValue(0);
+        setHighlightedIndex(-1);
         setTimeState({ ...getCurrentTime(), stage: 'hour' });
         return;
       }
 
-      // ── Encoder rotate ────────────────────────────────────
+      // Encoder rotate
       if (data.type === 'encoder_rotate') {
-        // Debounce: ignore if less than 100ms since last event
         const now = Date.now();
         if (now - lastUpdateRef.current < 100) return;
         lastUpdateRef.current = now;
 
         const step = data.direction === 'cw' ? 1 : -1;
 
-        // Airport dropdown screens
         if (screen === 'dept' || screen === 'arrival') {
           setHighlightedIndex(prev => {
             const next = (prev + step + airports.length) % airports.length;
@@ -124,7 +185,6 @@ export default function FlightDevice() {
           return;
         }
 
-        // Time screens — adjust only the active stage by exactly 1
         if (screen === 'time' || screen === 'arrivalTime') {
           setTimeState(prev => {
             const next = { ...prev };
@@ -145,23 +205,23 @@ export default function FlightDevice() {
           return;
         }
 
-        // Knob screens
-        if (screen === 'carbon')  setCarbonValue(v  => Math.min(100, Math.max(0, v + (step * 2))));
-        if (screen === 'weather') setWeatherValue(v => Math.min(100, Math.max(0, v + (step * 2))));
-        if (screen === 'travel')  setTravelValue(v  => Math.min(100, Math.max(0, v + (step * 2))));
+        if (screen === 'carbon')     setCarbonValue(v     => Math.min(100, Math.max(0, v + (step * 2))));
+        if (screen === 'weather')    setWeatherValue(v    => Math.min(100, Math.max(0, v + (step * 2))));
+        if (screen === 'travel')     setTravelValue(v     => Math.min(100, Math.max(0, v + (step * 2))));
+        if (screen === 'airTraffic') setAirTrafficValue(v => Math.min(100, Math.max(0, v + (step * 2))));
       }
     });
 
-    // Cleanup listeners on unmount (socket itself stays alive)
     return () => socket.off('hardware_event');
-  }, []); // ← empty deps: runs once, never recreates socket
+  }, []);
 
   const timezone = new Date()
     .toLocaleTimeString('en-US', { timeZoneName: 'short' })
     .split(' ').pop();
 
   return (
-    <div style={{ width: "800px", height: "480px", overflow: "hidden", background: "#1a1a2e" }}>
+    <div style={{ width:"800px", height:"480px", overflow:"hidden", background:"#1a1a2e" }}>
+
       {currentScreen === 'dept' &&
         <DeptScreen value={deptAirport} airports={airports} highlightedIndex={highlightedIndex}
           onNext={() => setCurrentScreen('time')} />}
@@ -179,27 +239,37 @@ export default function FlightDevice() {
           onNext={() => setCurrentScreen('carbon')} onBack={() => setCurrentScreen('arrival')} />}
 
       {currentScreen === 'carbon' &&
-        <KnobScreen label="Carbon Emissions" value={carbonValue}
+        <KnobScreen label="Carbon Emissions" value={carbonValue} onChange={setCarbonValue}
           onNext={() => setCurrentScreen('weather')} onBack={() => setCurrentScreen('arrivalTime')} />}
 
       {currentScreen === 'weather' &&
-        <KnobScreen label="Weather Safety" value={weatherValue}
+        <KnobScreen label="Weather Safety" value={weatherValue} onChange={setWeatherValue}
           onNext={() => setCurrentScreen('travel')} onBack={() => setCurrentScreen('carbon')} />}
 
       {currentScreen === 'travel' &&
-        <KnobScreen label="Travel Time" value={travelValue}
-          onNext={() => setCurrentScreen('confirm')} onBack={() => setCurrentScreen('weather')} />}
+        <KnobScreen label="Travel Time" value={travelValue} onChange={setTravelValue}
+          onNext={() => setCurrentScreen('airTraffic')} onBack={() => setCurrentScreen('weather')} />}
+
+      {currentScreen === 'airTraffic' &&
+        <KnobScreen label="Air Traffic" value={airTrafficValue} onChange={setAirTrafficValue}
+          onNext={() => setCurrentScreen('confirm')} onBack={() => setCurrentScreen('travel')} />}
 
       {currentScreen === 'confirm' &&
         <ConfirmScreen deptAirport={deptAirport} arrivalAirport={arrivalAirport}
           deptTime={deptTime} arrivalTime={arrivalTime} timezone={timezone}
-          carbonValue={carbonValue} weatherValue={weatherValue} travelValue={travelValue}
-          onBack={() => setCurrentScreen('travel')}
-          onEnter={() => setCurrentScreen('results')} />}
+          carbonValue={carbonValue} weatherValue={weatherValue}
+          travelValue={travelValue} airTrafficValue={airTrafficValue}
+          onBack={() => setCurrentScreen('airTraffic')}
+          onEnter={handleEnter} />}
 
       {currentScreen === 'results' &&
-        <ResultsScreen startDate={deptTime} endDate={arrivalTime} feasibilityValue={15}
+        <ResultsScreen
+          pathPoints={optimalPath}
+          startDate={formatDateTime(deptTime)}
+          endDate={formatDateTime(arrivalTime || deptTime)}
+          feasibilityValue={15}
           onNewFlight={() => setCurrentScreen('dept')} />}
+
     </div>
   );
 }

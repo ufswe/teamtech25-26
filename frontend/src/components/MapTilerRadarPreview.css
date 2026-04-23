@@ -44,8 +44,10 @@
 }
 
 .maptiler-preview__zoom-btn {
-    width: 40px;
-    height: 40px;
+    width: 64px;
+    height: 64px;
+    font-size: 34px;
+    line-height: 64px;
     background-color: #2E549F;
     color: #fff;
     border: none;
@@ -63,8 +65,10 @@
     top: 98px;
     left: 10px;
     z-index: 3;
-    width: 40px;
-    height: 40px;
+    width: 64px;
+    height: 64px;
+    top: 148px;
+    font-size: 28px;
     background-color: #2E549F;
     color: #fff;
     border: none;
@@ -97,6 +101,7 @@
     z-index: 3;
     width: 40px;
     height: 40px;
+    font-size: 24px;
     background: #2E549F !important;
     color: #fff;
     border: 0 !important;
@@ -146,8 +151,8 @@
 }
 
 .maptiler-preview__center-icon {
-    width: 20px;
-    height: 20px;
+    width: 30px;
+    height: 30px;
     color: #fff;
 }
 
