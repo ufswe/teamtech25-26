@@ -228,6 +228,7 @@ export default function Flight() {
               dest_long: destC.lng,
               src_code: deptAirport,
               dest_code: arrivalAirport,
+              dept_time: deptTime
           }),
       });
       clearTimeout(timeoutId);

@@ -23,6 +23,7 @@ def get_optimal_path():
     dest_lat = data.get("dest_lat")
     dest_long = data.get("dest_long")
     dest_airport = data.get("dest_code")
+    dept_time = data.get("dept_time")
 
     if None in (src_lat, src_long, dest_lat, dest_long):
         return jsonify({"error": "Missing coordinates"}), 400
@@ -46,12 +47,12 @@ def get_optimal_path():
 
     graph_obj.build_adjacency_list()
     min_cost, path = graph_obj.min_cost_path(src, dest) #optimal path
-    cleaned_path = graph_obj.location(path) #cleaned path to return to frontend
+    cleaned_path = graph_obj.location(path) #cleaned path to return to frontend [(lat, long)]
     print("cleaned_path:", cleaned_path)
 
     print(src_airport, dest_airport)
     setup_database()
-    write_airports(src_airport, dest_airport)
+    write_airports(src_airport, dest_airport, dept_time, cleaned_path, "priority_placeholder", False, "date_placeholder")
     
     return jsonify({"optimal_path": cleaned_path, "min_cost": min_cost}), 200 #placeholder
 
