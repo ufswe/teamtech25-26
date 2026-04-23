@@ -26,7 +26,16 @@ CORS(app)
 #DESIGN
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
 
-@app.route('/api/optimal-path', methods=['POST'])
+# design
+@socketio.on('connect')
+def handle_connect():
+    print("\n✨ [WEB] React Frontend Connected to Socket.IO!")
+
+# design
+@socketio.on('disconnect')
+def handle_disconnect():
+    print("🔌 [WEB] React Frontend Disconnected")
+
 @app.route('/api/optimal-path', methods=['POST'])
 def get_optimal_path():
     data = request.json
@@ -109,5 +118,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print("[System] Shutting down...")
     finally:
-        import RPi.GPIO as GPIO
-        GPIO.cleanup()
+        # design
+        pass

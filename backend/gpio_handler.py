@@ -1,134 +1,207 @@
-# DESIGN - gpio_handler.py
-import eventlet
-eventlet.monkey_patch()  # Essential for SocketIO + Hardware Interrupts
-
-import RPi.GPIO as GPIO
+#design
+import os
+import sys
 import time
+import signal
+import threading
+import subprocess
+import eventlet
+eventlet.monkey_patch()
 
-# ── Pin Definitions ───────────────────────────────────────────
-# Ensure these match your physical wiring (BCM Numbers)
-BTN_ENTER   = 17   # Confirm button
-BTN_CLEAR   = 27   # Clear selection
-ENC_CLK     = 22   # Rotary encoder clock
-ENC_DT      = 23   # Rotary encoder data
-ENC_SW      = 24   # Rotary encoder push
-SLIDE_SW    = 25   # Mode toggle
-PIEZO       = 18   # Buzzer
+from gpiozero import Button, RotaryEncoder, TonalBuzzer
+from gpiozero.tones import Tone
 
-# ── Global State ─────────────────────────────────────────────
-TOPICS = ["topic_1", "topic_2", "topic_3"]
+# ── Pins ──────────────────────────────────────────────────────
+BTN_POWER_PIN  = 17   # ← now a PUSH BUTTON (was slide switch)
+BUZZER_PIN     = 13
+ENCODER_SW_PIN = 27
+BTN_ENTER_PIN  = 5
+BTN_CLEAR_PIN  = 6
+ENCODER_A_PIN  = 7
+ENCODER_B_PIN  = 8
+
+TOPICS = ["Carbon Emissions", "Weather Safety", "Travel Time"]
+
+os.environ["XDG_RUNTIME_DIR"] = "/run/user/1000"
+
+# ── Hardware Init ─────────────────────────────────────────────
+buzzer     = TonalBuzzer(BUZZER_PIN)
+btn_power  = Button(BTN_POWER_PIN,  pull_up=True, bounce_time=0.3)
+btn_enter  = Button(BTN_ENTER_PIN,  pull_up=True)
+btn_clear  = Button(BTN_CLEAR_PIN,  pull_up=True)
+encoder    = RotaryEncoder(ENCODER_A_PIN, ENCODER_B_PIN, wrap=False, max_steps=0, bounce_time=0.05)
+encoder_sw = Button(ENCODER_SW_PIN, pull_up=True, bounce_time=0.2)
+
+# ── State ─────────────────────────────────────────────────────
+system_on     = True   # starts OFF — first button press turns it ON
 encoder_index = 0
-encoder_last_clk = 0
-piezo_pwm = None
+_socketio     = None
 
-# ── Buzzer Helpers ────────────────────────────────────────────
-def beep(duration=0.08, freq=1200):
-    if piezo_pwm:
-        piezo_pwm.ChangeFrequency(freq)
-        piezo_pwm.start(50)
-        time.sleep(duration)
-        piezo_pwm.stop()
+# ── Helpers ───────────────────────────────────────────────────
+def beep(freq, dur):
+    try:
+        buzzer.play(Tone(freq))
+        time.sleep(dur)
+        buzzer.stop()
+    except Exception:
+        pass
 
-def beep_clear(duration=0.05, freq=400):
-    if piezo_pwm:
-        piezo_pwm.ChangeFrequency(freq)
-        piezo_pwm.start(50)
-        time.sleep(duration)
-        piezo_pwm.stop()
+def toggle_display(state):
+    cmd = "on" if state else "off"
+    os.system(f"wlr-randr --output DSI-1 --{cmd}")
 
-# ── Setup GPIO ───────────────────────────────────────────────
-def setup_hw():
-    global encoder_last_clk, piezo_pwm
-    
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setwarnings(False)
+def print_status_dashboard():
+    print("\n--- LIVE HARDWARE DASHBOARD ---")
+    print(f" [17] POWER BTN: {'PRESSED' if btn_power.is_pressed else 'Open'}")
+    print(f" [5]  ENTER:     {'PRESSED' if btn_enter.is_pressed else 'Open'}")
+    print(f" [6]  CLEAR:     {'PRESSED' if btn_clear.is_pressed else 'Open'}")
+    print(f" [27] ENC_SW:    {'PRESSED' if encoder_sw.is_pressed else 'Open'}")
+    print(f" [7/8] ENCODER:  {int(encoder.steps)}")
+    print(f" SYSTEM:         {'ON' if system_on else 'OFF'}")
+    print("--------------------------------\n")
 
-    # Inputs with Pull-Up resistors
-    pins_in = [BTN_ENTER, BTN_CLEAR, ENC_CLK, ENC_DT, ENC_SW, SLIDE_SW]
-    for pin in pins_in:
-        GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+def shutdown_system():
+    """Kill app processes, blank screen, then shut down cleanly."""
+    print("[GPIO] Shutting down system...")
+    for f in [392, 330, 262]: beep(f, 0.05)
+    # Kill Chromium and React
+    os.system("pkill chromium-browser")
+    os.system("pkill -f 'react-scripts'")
+    time.sleep(0.5)
+    # Blank the display
+    toggle_display(False)
+    time.sleep(0.3)
+    # Exit the backend process — same effect as Ctrl+C
+    os.kill(os.getpid(), signal.SIGINT)
 
-    # Output for Buzzer
-    GPIO.setup(PIEZO, GPIO.OUT)
-    piezo_pwm = GPIO.PWM(PIEZO, 1000)
-    
-    # Initialize encoder state
-    encoder_last_clk = GPIO.input(ENC_CLK)
+def clean_exit(sig, frame):
+    toggle_display(True)
+    sys.exit(0)
 
-# ── Register Callbacks ───────────────────────────────────────
+signal.signal(signal.SIGINT, clean_exit)
+
+# ── register_callbacks: called by app.py ──────────────────────
 def register_callbacks(socketio):
-    setup_hw()
+    global system_on, encoder_index, _socketio
+    _socketio = socketio
 
-    # — Enter Button —
-    def on_enter(channel):
-        # We use socketio.sleep(0) to allow eventlet to process the emission
-        beep(duration=0.08, freq=1200)
-        socketio.emit("hardware_event", {
-            "type": "button_enter",
-            "value": True
-        })
-        print("[GPIO] Enter button pressed")
+    def on_power_press():
+        """Toggle system ON/OFF on each button press."""
+        global system_on
+        system_on = not system_on
 
-    # — Clear Button —
-    def on_clear(channel):
-        beep_clear(duration=0.05, freq=400)
-        socketio.emit("hardware_event", {
-            "type": "button_clear",
-            "value": True
-        })
-        print("[GPIO] Clear button pressed")
+        if system_on:
+            # ── Turn ON ───────────────────────────────────────
+            print("[GPIO] Power button → TURNING ON")
+            toggle_display(True)
+            for f in [262, 330, 392]: beep(f, 0.05)
+            # Relaunch Chromium if it's not running
+            subprocess.Popen([
+                "chromium-browser", "--kiosk", "--noerrdialogs",
+                "--disable-infobars", "--no-first-run",
+                "http://localhost:3000/flight?device=true"
+            ], env={**os.environ, "DISPLAY": ":0"})
+            _socketio.emit("hardware_event", {"type": "power", "value": "on"})
+        else:
+            # ── Turn OFF ──────────────────────────────────────
+            print("[GPIO] Power button → TURNING OFF")
+            _socketio.emit("hardware_event", {"type": "power", "value": "off"})
+            # Small delay so socket event sends before we kill everything
+            time.sleep(0.3)
+            shutdown_system()
 
-    # — Rotary Encoder —
-    def on_encoder(channel):
-        global encoder_last_clk, encoder_index
-        clk_state = GPIO.input(ENC_CLK)
-        dt_state  = GPIO.input(ENC_DT)
+        print_status_dashboard()
 
-        if clk_state != encoder_last_clk:
-            # Determine direction
-            direction = "cw" if dt_state != clk_state else "ccw"
-            
-            if direction == "cw":
-                encoder_index = (encoder_index + 1) % len(TOPICS)
-            else:
-                encoder_index = (encoder_index - 1) % len(TOPICS)
+    # Attach the press handler — fires once per press, not held
+    btn_power.when_pressed = on_power_press
 
-            beep(duration=0.03, freq=800)
-            socketio.emit("hardware_event", {
-                "type": "encoder_rotate",
+    def check_encoder():
+        global encoder_index
+        current_steps = int(encoder.steps)
+        if not hasattr(check_encoder, "last_steps"):
+            check_encoder.last_steps = 0
+        if current_steps != check_encoder.last_steps:
+            direction = "cw" if current_steps > check_encoder.last_steps else "ccw"
+            encoder_index = current_steps
+            beep(784 if direction == "cw" else 523, 0.02)
+            _socketio.emit("hardware_event", {
+                "type":      "encoder_rotate",
                 "direction": direction,
-                "topic": TOPICS[encoder_index],
-                "index": encoder_index
+                "value":     encoder_index
             })
-            print(f"[GPIO] Encoder → {direction} → {TOPICS[encoder_index]}")
+            check_encoder.last_steps = current_steps
+            print(f"[GPIO] Encoder → {direction} → {encoder_index}")
 
-        encoder_last_clk = clk_state
+    def check_encoder_sw():
+        if encoder_sw.is_pressed:
+            beep(440, 0.05)
+            _socketio.emit("hardware_event", {"type": "encoder_press", "value": True})
+            print("[GPIO] Encoder button pressed")
+            time.sleep(0.3)
 
-    # — Slide Switch —
-    def on_slide(channel):
-        # Active LOW (button pressed/switch flipped connects to GND)
-        state = not GPIO.input(SLIDE_SW) 
-        socketio.emit("hardware_event", {
-            "type": "slide_switch",
-            "value": "on" if state else "off"
-        })
-        print(f"[GPIO] Slide switch → {'ON' if state else 'OFF'}")
+    def check_enter():
+        if btn_enter.is_pressed:
+            beep(659, 0.07)
+            _socketio.emit("hardware_event", {"type": "button_enter", "value": True})
+            print("[GPIO] Enter button pressed")
+            time.sleep(0.4)
 
-    # — Encoder Button —
-    def on_encoder_sw(channel):
-        beep(duration=0.05, freq=1000)
-        socketio.emit("hardware_event", {
-            "type": "encoder_press",
-            "value": True
-        })
-        print("[GPIO] Encoder button pressed")
+    def check_clear():
+        if btn_clear.is_pressed:
+            beep(349, 0.1)
+            _socketio.emit("hardware_event", {"type": "button_clear", "value": True})
+            print("[GPIO] Clear button pressed")
+            time.sleep(0.5)
 
-    # ── Attach Interrupts ─────────────────────────────────────
-    # bouncetime prevents "double-clicks" from electrical noise
-    GPIO.add_event_detect(BTN_ENTER, GPIO.FALLING, callback=on_enter, bouncetime=300)
-    GPIO.add_event_detect(BTN_CLEAR, GPIO.FALLING, callback=on_clear, bouncetime=300)
-    GPIO.add_event_detect(ENC_CLK,   GPIO.BOTH,    callback=on_encoder, bouncetime=5)
-    GPIO.add_event_detect(SLIDE_SW,  GPIO.BOTH,    callback=on_slide, bouncetime=100)
-    GPIO.add_event_detect(ENC_SW,    GPIO.FALLING, callback=on_encoder_sw, bouncetime=300)
+    def hardware_loop():
+        print("[GPIO] Hardware loop started ✓")
+        print("[GPIO] System is ON — press power button to turn off")
+        try:
+            while True:
+                if system_on:
+                    check_encoder()
+                    check_encoder_sw()
+                    check_enter()
+                    check_clear()
+                time.sleep(0.01)
+        except Exception as e:
+            print(f"[GPIO] Loop error: {e}")
+            toggle_display(True)
 
+    thread = threading.Thread(target=hardware_loop, daemon=True)
+    thread.start()
     print("[GPIO] All hardware callbacks registered ✓")
+
+
+# ── Standalone mode (systemd service) ─────────────────────────
+if __name__ == "__main__":
+    print("[GPIO Standalone] Running — press power button to start")
+    _system_on = False
+
+    def standalone_power():
+        global _system_on
+        _system_on = not _system_on
+        if _system_on:
+            toggle_display(True)
+            for f in [262, 330, 392]: beep(f, 0.05)
+            subprocess.Popen([
+                "chromium-browser", "--kiosk", "--noerrdialogs",
+                "--disable-infobars", "--no-first-run",
+                "http://localhost:3000/flight?device=true"
+            ], env={**os.environ, "DISPLAY": ":0"})
+            print("[GPIO Standalone] System ON")
+        else:
+            print("[GPIO Standalone] System OFF — shutting down")
+            for f in [392, 330, 262]: beep(f, 0.05)
+            os.system("pkill chromium-browser")
+            os.system("pkill -f 'react-scripts'")
+            time.sleep(0.5)
+            toggle_display(False)
+            sys.exit(0)
+
+    btn_power.when_pressed = standalone_power
+
+    try:
+        signal.pause()   # wait for button events indefinitely
+    except KeyboardInterrupt:
+        toggle_display(True)
