@@ -11,3 +11,11 @@ def setup_database():
     ''')
     conn.commit()
     conn.close()
+
+def write_airports(code1, code2):
+    command = f"INSERT INTO flight_history (airport_code_1, airport_code_2) values (\"{code1}\", \"{code2}\")"
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    c.execute(command)
+    conn.commit()
+    conn.close()

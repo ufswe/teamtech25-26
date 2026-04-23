@@ -8,6 +8,7 @@ from retry_requests import retry
 from calculations.cost_function import Cost
 from data_structures.graph import Graph
 from data_structures.node import Node
+from setup_database import *
 
 app = Flask(__name__)
 CORS(app)
@@ -18,8 +19,10 @@ def get_optimal_path():
     data = request.json
     src_lat = data.get("src_lat")
     src_long = data.get("src_long")
+    src_airport = data.get("src_code")
     dest_lat = data.get("dest_lat")
     dest_long = data.get("dest_long")
+    dest_airport = data.get("dest_code")
 
     if None in (src_lat, src_long, dest_lat, dest_long):
         return jsonify({"error": "Missing coordinates"}), 400
@@ -34,6 +37,8 @@ def get_optimal_path():
     nodes_per_layer = cost_func.get_nodes_per_layer(src_lat, src_long, dest_lat, dest_long, num_layers)
     print("nodes_per_layer", nodes_per_layer)
 
+    
+
     #graph object from backend
     graph_obj = Graph()
     graph_obj.initialize_layers(nodes_per_layer)
@@ -43,6 +48,11 @@ def get_optimal_path():
     min_cost, path = graph_obj.min_cost_path(src, dest) #optimal path
     cleaned_path = graph_obj.location(path) #cleaned path to return to frontend
     print("cleaned_path:", cleaned_path)
+
+    print(src_airport, dest_airport)
+    setup_database()
+    write_airports(src_airport, dest_airport)
+    
     return jsonify({"optimal_path": cleaned_path, "min_cost": min_cost}), 200 #placeholder
 
 @app.route('/api/optimal-path2', methods=['POST'])

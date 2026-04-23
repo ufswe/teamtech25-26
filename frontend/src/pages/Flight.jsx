@@ -226,6 +226,8 @@ export default function Flight() {
               src_long: srcC.lng,
               dest_lat: destC.lat,
               dest_long: destC.lng,
+              src_code: deptAirport,
+              dest_code: arrivalAirport,
           }),
       });
       clearTimeout(timeoutId);
