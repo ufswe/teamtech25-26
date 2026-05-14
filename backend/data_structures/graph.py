@@ -4,12 +4,15 @@ import heapq
 
 from calculations.cost_function import Cost
 
+from api.weather_fetch import fetch_weather_features
+
 
 class Graph:
-    def __init__(self):
+    def __init__(self, cost_obj=None):
         self._adjacency_list = {} #store nodes to all neighbors
         self._dp_table = {} #{node: (minimum_cost_to_reach_node, parent_node),...}
         self._layers = [] #list of lists of nodes, each list is a layer of nodes
+        self._cost_obj = cost_obj  # ✅ stored for reuse across all edges
 
     def add_vertex(self, node, cost):
         pass
@@ -22,6 +25,7 @@ class Graph:
         self._layers.append(layers[2])
 
     def min_cost_path(self, start, end):
+    #    traffic_cache = {}
        path = []
        self._dp_table = {} 
        if not end.airport:
@@ -43,8 +47,16 @@ class Graph:
                for neighbor in self._adjacency_list.get(node, []):
                     if not neighbor.isOpen:
                        continue
-                    cost_obj = Cost(node,neighbor)
-                    cost_to_neighbor = cost_obj.get_total_cost() + self._dp_table[node][0]
+                    # Fetch weather for the edge midpoint
+                    mid_lat = (node.getLatitude() + neighbor.getLatitude()) / 2
+                    mid_lon = (node.getLongitude() + neighbor.getLongitude()) / 2
+                    weather_features = fetch_weather_features(mid_lat, mid_lon)
+                    # cost_obj = Cost(node, neighbor)
+                    # self._cost_obj._traffic_cache = traffic_cache
+                    self._cost_obj.src = node       # ✅ reuse same object
+                    self._cost_obj.dest = neighbor
+
+                    cost_to_neighbor = self._cost_obj.get_total_cost(weather_features) + self._dp_table[node][0]
                     if cost_to_neighbor < self._dp_table[neighbor][0]:
                        self._dp_table[neighbor] = (cost_to_neighbor, node)
                     
