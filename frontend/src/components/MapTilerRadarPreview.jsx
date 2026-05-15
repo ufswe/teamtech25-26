@@ -45,12 +45,15 @@ const getRadarRange = (layerStart, layerEnd, selectedStart, selectedEnd) => {
   return { start: rangeStart, end: rangeEnd };
 };
 
+
+
 export default function MapTilerRadarPreview({
   weatherRadarVisible = true,
   pathPoints = [],
   startDate = DEFAULT_START_DATE,
   endDate = DEFAULT_END_DATE,
-  selectedAirports = []
+  selectedAirports = [],
+  onMapReady = () => {}
 }) {
   const [fullscreen, setFullscreen] = useState(false);
   const [containerStyle, setContainerStyle] = useState({});
@@ -72,6 +75,7 @@ export default function MapTilerRadarPreview({
   const playAnchorRef = useRef({ time: 0, realMs: 0 });
   const animationRef = useRef({ rafId: null, lastMs: 0, time: 0 });
   const restoreViewRef = useRef(false);
+
 
   const bringPathToFront = () => {
     if (!mapRef.current) return;
@@ -351,6 +355,7 @@ export default function MapTilerRadarPreview({
     const source = mapRef.current.getSource("flight-path");
     if (source) source.setData(lineFeature);
     bringPathToFront();
+    onMapReady();
   }, [lineFeature]);
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import "../components/Map.css";
 import "../styles/flight.css";
@@ -16,6 +16,7 @@ import Input from "../components/Input.jsx";
 import Knob from "../components/Knob.jsx";
 import ToggleSwitch from "../components/ToggleSwitch.jsx"; // toggle for map overlay views
 import FeasibilityBar from "../components/FeasibilityBar.jsx"; // horizontal bar showing flight feasibility
+import Loading from "../components/Loading.jsx"; // loading screen with globe animation
 import airportData from "../global-airports.json";
 import FlightDevice from "./device/FlightDevice";
 import KnobScreen from './device/KnobScreen.jsx';
@@ -73,8 +74,6 @@ export default function Flight() {
     const [arrivalTimezone, setArrivalTimezone] = useState("EST");
 
     // 
-    
-
       const airports = useMemo(() => {
       return airportData.features
         .map((feature) => {
@@ -128,6 +127,13 @@ export default function Flight() {
     const [minCost, setMinCost ] = useState(null);
     const [pathError, setPathError ] = useState(null);
     const [optimalPath, setOptimalPath]= useState(null);
+
+    // Force weather view on when a new path arrives
+    useEffect(() => {
+      if (optimalPath) {
+        setWeatherView(true);
+      }
+    }, [optimalPath]);
 
     useEffect(() => {
       sessionStorage.setItem("flight.deptTime", deptTime || "");
@@ -185,6 +191,19 @@ export default function Flight() {
     const radarEndDate = formatDateTime(arrivalDate, arrivalTime || deptTime);
 
     const [isLoading, setIsLoading] = useState(false);
+    const isLoadingRef = useRef(false);
+    const mapReadyRef = useRef(false);      // ✅ add
+    const pathReadyRef = useRef(false);
+
+    const tryDismissLoading = () => {
+    console.log("tryDismiss:", { map: mapReadyRef.current, path: pathReadyRef.current });
+    if (mapReadyRef.current && pathReadyRef.current) {
+      isLoadingRef.current = false;
+      pathReadyRef.current = false;  // reset for next submit
+      setIsLoading(false);
+      console.log("🟢 both ready — dismissed loading");
+    }
+  };
 
     // const handleSubmit = async () => {
     //   setIsLoading(true);
@@ -201,20 +220,23 @@ export default function Flight() {
         return;
       }
 
-      //Look up their coordinates
-      const srcC = getAirportCoords(deptAirport);
-      const destC = getAirportCoords(arrivalAirport);
-      if(!srcC || !destC) {
-        console.log("Error with fetching src coords or dest coords");
-        return;
-      }
+      //Look up their coordinates
+      const srcC = getAirportCoords(deptAirport);
+      const destC = getAirportCoords(arrivalAirport);
+      if(!srcC || !destC) {
+        console.log("Error with fetching src coords or dest coords");
+        return;
+      }
 
-      //Call Flask
-      setWeatherView(true);
-      setIsLoading(true);
-      try{
-        const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+    //Call Flask
+    setWeatherView(true);
+    setIsLoading(true);
+    mapReadyRef.current = false;  // ✅ reset — wait for map to confirm ready again
+    pathReadyRef.current = false; // ✅ reset path too
+
+    try{
+    const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1000000);
       const response = await fetch("http://localhost:5001/api/optimal-path", {
           method: "POST",
           headers: {
@@ -226,26 +248,34 @@ export default function Flight() {
               src_long: srcC.lng,
               dest_lat: destC.lat,
               dest_long: destC.lng,
+              WT: travelValue,
+              WC: airTrafficValue,
+              WW: weatherValue,
+              WE: carbonValue
           }),
       });
       clearTimeout(timeoutId);
 
         //Save the path
         const data = await response.json();
-        setOptimalPath(data.optimal_path); // [[lat, lng], [lat, lng], [lat, lng], ...]
+        console.log("✅ path received");
+        pathReadyRef.current = true;
+        setOptimalPath(data.optimal_path);
+        tryDismissLoading();
       }
       catch(error){
         console.error("Failed to fetch optimal path:", error);
         setPathError("Failed to calculate path");
-      }
-      finally{
         setIsLoading(false);
+        isLoadingRef.current = false;
       }
     }
 
     return (
-      <div className="flight-page">
-        <div className="control-panel">
+      <>
+        {isLoading && <Loading />}
+        <div className="flight-page">
+          <div className="control-panel">
           <div className="flight-info">
             <div className="source">
               <Dropdown
@@ -330,7 +360,9 @@ export default function Flight() {
               >
                 Clear
               </Button>
-              <Button onClick={handleSubmit}>Enter</Button>
+              <Button onClick={handleSubmit} disabled={isLoading}>
+                {isLoading ? "Calculating..." : "Enter"}
+              </Button>
             </div>
           </div>
         </div>
@@ -342,6 +374,11 @@ export default function Flight() {
             endDate={radarEndDate}
             pathPoints={optimalPath}
             selectedAirports={[deptAirport, arrivalAirport].filter(Boolean)}
+            onMapReady={() => {
+              console.log("🗺️ map ready");
+              mapReadyRef.current = true;
+              tryDismissLoading();
+            }}
           />
           {/* Info panel: map overlay toggles, flight stats, and feasibility */}
           <div className="info-panel">
@@ -367,8 +404,8 @@ export default function Flight() {
             <FeasibilityBar value={15} />
           </div>
         </div>
-      </div>
-
+        </div>
+      </>
     );
   }
 

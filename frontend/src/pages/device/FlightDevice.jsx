@@ -98,7 +98,11 @@ export default function FlightDevice() {
           src_lat: srcC.lat,
           src_long: srcC.lng,
           dest_lat: destC.lat,
-          dest_long: destC.lng
+          dest_long: destC.lng,
+          WT: travelValue,
+          WC: airTrafficValue,
+          WW: weatherValue,
+          WE: carbonValue
         })
       });
 
@@ -196,6 +200,7 @@ export default function FlightDevice() {
           carbonValue={carbonValue}
           weatherValue={weatherValue}
           travelValue={travelValue}
+          airTrafficValue={airTrafficValue}
           onBack={goBack}
           onEnter={handleEnter}
         />

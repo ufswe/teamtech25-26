@@ -412,7 +412,7 @@ class Cost:
 
         mid_lat = (self.src.getLatitude() + self.dest.getLatitude()) / 2
         mid_lon = (self.src.getLongitude() + self.dest.getLongitude()) / 2
-        collision_density = self.get_collision_density_score(mid_lat, mid_lon)
+        # collision_density = self.get_collision_density_score(mid_lat, mid_lon)
 
         carbon_emissions = self.get_carbon_emissions() # lower the better
 
@@ -427,7 +427,6 @@ class Cost:
 
         result = (self.WD * norm_distance + 
                   self.WT * norm_time  + 
-                  self.WC * collision_density + 
                   self.WE * norm_carbon + 
                   self.WW * prediction)
         
